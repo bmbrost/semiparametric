@@ -79,7 +79,7 @@
 
 \shape smallcaps
 \size larger
-Semiparametric Regression for Normally Distributed Data
+Semiparametric Regression for Binomially Distributed Data
 \end_layout
 
 \begin_layout Standard
@@ -107,12 +107,20 @@ height "0.5pt"
 \end_layout
 
 \begin_layout Subsubsection*
+Description
+\end_layout
+
+\begin_layout Standard
+A semiparametric, probit regression model for binomially distributed data.
+\end_layout
+
+\begin_layout Subsubsection*
 Implementation
 \end_layout
 
 \begin_layout Standard
-The file normal.semipar.sim.R simulates data according to the model statement
- presented below, and normal.semipar.mcmc.R contains the MCMC algorithm for
+The file probit.semipar.sim.R simulates data according to the model statement
+ presented below, and probit.semipar.mcmc.R contains the MCMC algorithm for
  model fitting.
  
 \end_layout
@@ -123,10 +131,14 @@ Model statement
 
 \begin_layout Standard
 Let 
-\begin_inset Formula $\mathbf{y}=(y_{1},\ldots,y_{T})^{\prime}$
+\begin_inset Formula $y_{t}$
 \end_inset
 
- be a vector of observations.
+, for 
+\begin_inset Formula $t=1,\ldots,T$
+\end_inset
+
+, be observed data that take on the values {0,1}.
  Also let 
 \begin_inset Formula $\mathbf{X}$
 \end_inset
@@ -157,18 +169,25 @@ Let
  models non-linear patterns or dependence non-parametrically.
 \begin_inset Formula 
 \begin{eqnarray*}
-\mathbf{y} & \sim & {\cal N}(\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\alpha},\sigma^{2}\mathbf{I})\\
+y_{t} & \sim & \begin{cases}
+0, & u_{t}\le0\\
+1, & u_{t}>1
+\end{cases}\\
+u_{t} & \sim & {\cal N}(\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\alpha},\mathbf{1})\\
 \boldsymbol{\beta} & \sim & {\cal N}(\mathbf{0},\sigma_{\beta}^{2}\mathbf{I})\\
-\boldsymbol{\alpha} & \sim & {\cal N}(\mathbf{0},\sigma_{\alpha}^{2}\mathbf{I})\\
-\sigma^{2} & \sim & \text{IG}(r,q)
+\boldsymbol{\alpha} & \sim & {\cal N}(\mathbf{0},\sigma_{\alpha}^{2}\mathbf{I})
 \end{eqnarray*}
 
 \end_inset
 
 Models of this type are typically fit using a large number of basis vectors,
  more than necessary to approximate non-linear trends or dependence.
- Regularization (e.g., ridge penalty) is subsequently conducted to shrink
- the coefficients where appropriate.
+ Regularization (e.g., a ridge penalty) is subsequently conducted to shrink
+ the coefficients 
+\begin_inset Formula $\boldsymbol{\alpha}$
+\end_inset
+
+ toward 0 where appropriate.
  Therefore, the parameter 
 \begin_inset Formula $\sigma_{\alpha}^{2}$
 \end_inset
@@ -183,7 +202,15 @@ Models of this type are typically fit using a large number of basis vectors,
 \end_inset
 
 , results in a mixed effects model similar to that implemented by the function
- lme in the R package nlme.
+ 
+\family typewriter
+glmer
+\family default
+ (???) in the R package 
+\family typewriter
+lme
+\family default
+4.
 \end_layout
 
 \begin_layout Subsubsection*
@@ -194,6 +221,45 @@ Full conditional distributions
 \noindent
 
 \emph on
+Observation model auxiliary variable (
+\begin_inset Formula $u_{t}$
+\end_inset
+
+):
+\emph default
+
+\begin_inset Formula 
+\begin{eqnarray*}
+[u_{t}|\cdot] & \propto & [y_{t}|u_{t}][u_{t}]\\
+ & \propto & \left(1_{\{y_{t}=0\}}1_{\{u_{t}\le0\}}+1_{\{y_{t}=1\}}1_{\{u_{t}>0\}}\right)\times{\cal N}(u_{t}\mid\mathbf{x}_{t}^{\prime}\boldsymbol{\beta}+\mathbf{z}_{t}^{\prime}\boldsymbol{\alpha},\mathbf{1})\\
+ & = & \begin{cases}
+{\cal TN}(\mathbf{x}_{t}^{\prime}\boldsymbol{\beta}+\mathbf{z}_{t}^{\prime}\boldsymbol{\alpha},\mathbf{1})_{-\infty}^{0}, & y_{t}=0\\
+{\cal TN}(\mathbf{x}_{t}^{\prime}\boldsymbol{\beta}+\mathbf{z}_{t}^{\prime}\boldsymbol{\alpha},\mathbf{1})_{0}^{\infty}, & y_{t}=1
+\end{cases}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+
+\emph on
+\begin_inset VSpace bigskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+
+\emph on
+\begin_inset Newpage newpage
+\end_inset
+
 Fixed effects (
 \begin_inset Formula $\boldsymbol{\beta}$
 \end_inset
@@ -204,25 +270,25 @@ Fixed effects (
 \begin_inset Formula 
 \begin{eqnarray*}
 [\boldsymbol{\beta}|\cdot] & \propto & [\mathbf{y}|\boldsymbol{\beta},\boldsymbol{\alpha},\sigma^{2}][\boldsymbol{\beta}]\\
- & \propto & {\cal N}(\mathbf{y}|\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\alpha},\sigma^{2}\mathbf{I}){\cal N}(\boldsymbol{\beta}|\mathbf{0},\sigma_{\beta}^{2}\mathbf{I})\\
- & \propto & \exp\left\{ -\frac{1}{2}\left(\mathbf{y}-(\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\alpha})\right)^{\prime}\left(\sigma^{2}\mathbf{I}\right)^{-1}\left(\mathbf{y}-(\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\alpha})\right)\right\} \\
+ & \propto & {\cal N}(\mathbf{y}|\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\alpha},\mathbf{1}){\cal N}(\boldsymbol{\beta}|\mathbf{0},\sigma_{\beta}^{2}\mathbf{I})\\
+ & \propto & \exp\left\{ -\frac{1}{2}\left(\mathbf{y}-(\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\alpha})\right)^{\prime}\left(\mathbf{y}-(\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\alpha})\right)\right\} \\
  &  & \qquad\exp\left\{ -\frac{1}{2}\left(\boldsymbol{\beta}-\mathbf{0}\right)^{\prime}\left(\sigma_{\beta}^{2}\mathbf{I}\right)^{-1}\left(\boldsymbol{\beta}-\mathbf{0}\right)\right\} \\
- & \propto & \exp\left\{ -\frac{1}{2}\left((\mathbf{y}-\mathbf{Z}\boldsymbol{\alpha})-\mathbf{X}\boldsymbol{\beta}\right)^{\prime}\left(\sigma^{2}\mathbf{I}\right)^{-1}\left((\mathbf{y}-\mathbf{Z}\boldsymbol{\alpha})-\mathbf{X}\boldsymbol{\beta}\right)\right\} \\
+ & \propto & \exp\left\{ -\frac{1}{2}\left((\mathbf{y}-\mathbf{Z}\boldsymbol{\alpha})-\mathbf{X}\boldsymbol{\beta}\right)^{\prime}\left((\mathbf{y}-\mathbf{Z}\boldsymbol{\alpha})-\mathbf{X}\boldsymbol{\beta}\right)\right\} \\
  &  & \qquad\exp\left\{ -\frac{1}{2}\left(\boldsymbol{\beta}-\mathbf{0}\right)^{\prime}\left(\sigma_{\beta}^{2}\mathbf{I}\right)^{-1}\left(\boldsymbol{\beta}-\mathbf{0}\right)\right\} \\
- & \propto & \exp\left\{ -\frac{1}{2}\left(-2(\mathbf{y}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}\left(\sigma^{2}\mathbf{I}\right)^{-1}\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\beta}^{\prime}\mathbf{X}^{\prime}\left(\sigma^{2}\mathbf{I}\right)^{-1}\mathbf{X}\boldsymbol{\beta}\right)\right\} \times\\
+ & \propto & \exp\left\{ -\frac{1}{2}\left(-2(\mathbf{y}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\beta}^{\prime}\mathbf{X}^{\prime}\mathbf{X}\boldsymbol{\beta}\right)\right\} \times\\
  &  & \qquad\exp\left\{ -\frac{1}{2}\left(\boldsymbol{\beta}^{\prime}\left(\sigma_{\beta}^{2}\mathbf{I}\right)^{-1}\boldsymbol{\beta}\right)\right\} \\
- & \propto & \exp\left\{ -\frac{1}{2}\left(-2\left((\mathbf{y}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}\left(\sigma^{2}\mathbf{I}\right)^{-1}\mathbf{X}\right)\boldsymbol{\beta}+\boldsymbol{\beta}^{\prime}\left(\mathbf{X}^{\prime}\left(\sigma^{2}\mathbf{I}\right)^{-1}\mathbf{X}+\left(\sigma_{\beta}^{2}\mathbf{I}\right)^{-1}\right)\boldsymbol{\beta}\right)\right\} \times\\
+ & \propto & \exp\left\{ -\frac{1}{2}\left(-2\left((\mathbf{y}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}\mathbf{X}\right)\boldsymbol{\beta}+\boldsymbol{\beta}^{\prime}\left(\mathbf{X}^{\prime}\mathbf{X}+\left(\sigma_{\beta}^{2}\mathbf{I}\right)^{-1}\right)\boldsymbol{\beta}\right)\right\} \times\\
  & = & {\cal N}(\mathbf{A}^{-1}\mathbf{b},\mathbf{A}^{-1})
 \end{eqnarray*}
 
 \end_inset
 
 where 
-\begin_inset Formula $\mathbf{A}=(\mathbf{y}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}\left(\sigma^{2}\mathbf{I}\right)^{-1}\mathbf{X}$
+\begin_inset Formula $\mathbf{A}=\mathbf{X}^{\prime}\mathbf{X}+\left(\sigma_{\beta}^{2}\mathbf{I}\right)^{-1}$
 \end_inset
 
  and 
-\begin_inset Formula $\mathbf{b}^{\prime}=\mathbf{X}^{\prime}\left(\sigma^{2}\mathbf{I}\right)^{-1}\mathbf{X}+\left(\sigma_{\beta}^{2}\mathbf{I}\right)^{-1}$
+\begin_inset Formula $\mathbf{b}^{\prime}=(\mathbf{y}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}\mathbf{X}$
 \end_inset
 
 .
@@ -249,18 +315,18 @@ Random effects (
 \begin_inset Formula 
 \begin{eqnarray*}
 [\boldsymbol{\alpha}|\cdot] & \propto & [\mathbf{y}|\boldsymbol{\beta},\boldsymbol{\alpha},\sigma^{2}][\boldsymbol{\alpha}]\\
- & \propto & {\cal N}(\mathbf{y}|\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\alpha},\sigma^{2}\mathbf{I}){\cal N}(\boldsymbol{\alpha}|\mathbf{0},\sigma_{\alpha}^{2}\mathbf{I})\\
+ & \propto & {\cal N}(\mathbf{y}|\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\alpha},\mathbf{1}){\cal N}(\boldsymbol{\alpha}|\mathbf{0},\sigma_{\alpha}^{2}\mathbf{I})\\
  & = & {\cal N}(\mathbf{A}^{-1}\mathbf{b},\mathbf{A}^{-1})
 \end{eqnarray*}
 
 \end_inset
 
 where 
-\begin_inset Formula $\mathbf{A}=\mathbf{Z}^{\prime}\left(\sigma^{2}\mathbf{I}\right)^{-1}\mathbf{Z}+\left(\sigma_{\alpha}^{2}\mathbf{I}\right)^{-1}$
+\begin_inset Formula $\mathbf{A}=\mathbf{Z}^{\prime}\mathbf{Z}+\left(\sigma_{\alpha}^{2}\mathbf{I}\right)^{-1}$
 \end_inset
 
  and 
-\begin_inset Formula $\mathbf{b}^{\prime}=(\mathbf{y}-\mathbf{X}\boldsymbol{\beta})^{\prime}\left(\sigma^{2}\mathbf{I}\right)^{-1}\mathbf{Z}$
+\begin_inset Formula $\mathbf{b}^{\prime}=(\mathbf{y}-\mathbf{X}\boldsymbol{\beta})^{\prime}\mathbf{Z}$
 \end_inset
 
 .
@@ -276,32 +342,6 @@ where
 
 \emph default
  
-\end_layout
-
-\begin_layout Standard
-\noindent
-
-\emph on
-Observation error (
-\begin_inset Formula $\sigma^{2}$
-\end_inset
-
-):
-\emph default
-
-\begin_inset Formula 
-\begin{eqnarray*}
-[\sigma^{2}|\cdot] & \propto & [\mathbf{y}|\boldsymbol{\beta},\boldsymbol{\alpha},\sigma^{2}][\sigma^{2}]\\
- & \propto & |\sigma^{2}\mathbf{\text{\textbf{I}}}|^{-1/2}\exp\left\{ -\frac{1}{2}\left((\mathbf{y}-\mathbf{X}\boldsymbol{\beta}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}\left(\sigma^{2}\text{\textbf{I}}\right)^{-1}(\mathbf{y}-\mathbf{X}\boldsymbol{\beta}-\mathbf{Z}\boldsymbol{\alpha})\right)\right\} \times\\
- &  & \qquad\left(\sigma^{2}\right)^{-(q+1)}\exp\left\{ -\frac{1}{\sigma^{2}r}\right\} \\
- & \propto & \left(\sigma^{2}\right)^{-T/2}\exp\left\{ -\frac{1}{2\sigma^{2}}\left((\mathbf{y}-\mathbf{X}\boldsymbol{\beta}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}(\mathbf{y}-\mathbf{X}\boldsymbol{\beta}-\mathbf{Z}\boldsymbol{\alpha})\right)\right\} \left(\sigma^{2}\right)^{-(q+1)}\exp\left\{ -\frac{1}{\sigma^{2}r}\right\} \\
- & \propto & \left(\sigma^{2}\right)^{-(T/2+q+1)}\exp\left\{ -\frac{1}{\sigma^{2}}\left(\frac{(\mathbf{y}-\mathbf{X}\boldsymbol{\beta}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}(\mathbf{y}-\mathbf{X}\boldsymbol{\beta}-\mathbf{Z}\boldsymbol{\alpha})}{2}+\frac{1}{r}\right)\right\} \\
- & = & \text{IG}\left(\left(\frac{(\mathbf{y}-\mathbf{X}\boldsymbol{\beta}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}(\mathbf{y}-\mathbf{X}\boldsymbol{\beta}-\mathbf{Z}\boldsymbol{\alpha})}{2}+\frac{1}{r}\right)^{-1},\frac{T}{2}+q\right)
-\end{eqnarray*}
-
-\end_inset
-
-
 \end_layout
 
 \end_body
