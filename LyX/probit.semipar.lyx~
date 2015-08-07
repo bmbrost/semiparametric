@@ -173,7 +173,7 @@ y_{t} & \sim & \begin{cases}
 0, & u_{t}\le0\\
 1, & u_{t}>1
 \end{cases}\\
-u_{t} & \sim & {\cal N}(\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\alpha},\mathbf{1})\\
+u_{t} & \sim & {\cal N}(\mathbf{x}_{t}^{\prime}\boldsymbol{\beta}+\mathbf{z}_{t}^{\prime}\boldsymbol{\alpha},\mathbf{1})\\
 \boldsymbol{\beta} & \sim & {\cal N}(\mathbf{0},\sigma_{\beta}^{2}\mathbf{I})\\
 \boldsymbol{\alpha} & \sim & {\cal N}(\mathbf{0},\sigma_{\alpha}^{2}\mathbf{I})
 \end{eqnarray*}

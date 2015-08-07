@@ -79,7 +79,7 @@
 
 \shape smallcaps
 \size larger
-Semiparametric Regression for Binomially Distributed Data
+Semiparametric Probit Regression Model
 \end_layout
 
 \begin_layout Standard
@@ -111,7 +111,8 @@ Description
 \end_layout
 
 \begin_layout Standard
-A semiparametric, probit regression model for binomially distributed data.
+A semiparametric, probit regression model for data that take the values
+ {0,1}.
 \end_layout
 
 \begin_layout Subsubsection*
