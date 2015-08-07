@@ -167,8 +167,8 @@ Let
 
 Models of this type are typically fit using a large number of basis vectors,
  more than necessary to approximate non-linear trends or dependence.
- Regularization (e.g., ridge penalty) is subsequently conducted to shrink
- the coefficients where appropriate.
+ Regularization (e.g., a ridge penalty) is subsequently conducted to shrink
+ the coefficients toward 0 where appropriate.
  Therefore, the parameter 
 \begin_inset Formula $\sigma_{\alpha}^{2}$
 \end_inset
@@ -183,7 +183,15 @@ Models of this type are typically fit using a large number of basis vectors,
 \end_inset
 
 , results in a mixed effects model similar to that implemented by the function
- lme in the R package nlme.
+ 
+\family typewriter
+lme
+\family default
+ in the R package 
+\family typewriter
+nlme
+\family default
+.
 \end_layout
 
 \begin_layout Subsubsection*
@@ -218,11 +226,11 @@ Fixed effects (
 \end_inset
 
 where 
-\begin_inset Formula $\mathbf{A}=(\mathbf{y}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}\left(\sigma^{2}\mathbf{I}\right)^{-1}\mathbf{X}$
+\begin_inset Formula $\mathbf{A}=\mathbf{X}^{\prime}\left(\sigma^{2}\mathbf{I}\right)^{-1}\mathbf{X}+\left(\sigma_{\beta}^{2}\mathbf{I}\right)^{-1}$
 \end_inset
 
  and 
-\begin_inset Formula $\mathbf{b}^{\prime}=\mathbf{X}^{\prime}\left(\sigma^{2}\mathbf{I}\right)^{-1}\mathbf{X}+\left(\sigma_{\beta}^{2}\mathbf{I}\right)^{-1}$
+\begin_inset Formula $\mathbf{b}^{\prime}=(\mathbf{y}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}\left(\sigma^{2}\mathbf{I}\right)^{-1}\mathbf{X}$
 \end_inset
 
 .
