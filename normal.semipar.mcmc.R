@@ -2,7 +2,7 @@ normal.semipar.mcmc <- function(y,X,Z,priors,start,sigma.alpha=NULL,n.mcmc){
 	
 	###
 	### Brian M. Brost (05 AUG 2015)
-	### 'Mixed' effects model for normally distributed data
+	### Semiparametric regression for normallly distributed data
 	###
 
 	###
@@ -70,8 +70,8 @@ normal.semipar.mcmc <- function(y,X,Z,priors,start,sigma.alpha=NULL,n.mcmc){
 		###  Sample alpha ('random' effects) 
 		###
 
-		A.inv <- solve(t(Z)%*%Z/(sigma2)+Sigma.alpha.inv)
-		b <- t(t(y-X%*%beta)%*%Z/(sigma2))  # +mu.alpha%*%Sigma.alpha.inv
+		A.inv <- solve(t(Z)%*%Z/sigma2+Sigma.alpha.inv)
+		b <- (t(Z)%*%(y-X%*%beta))/sigma2  # +mu.alpha%*%Sigma.alpha.inv
 		alpha <- A.inv%*%b+chol(A.inv)%*%matrix(rnorm(qZ),qZ,1)
 
 		###
@@ -81,9 +81,9 @@ normal.semipar.mcmc <- function(y,X,Z,priors,start,sigma.alpha=NULL,n.mcmc){
 		# browser()
 		# A.inv <- solve(t(X)%*%Sigma.inv%*%X+Sigma.beta.inv)
 		# b <- t(t(y-Z%*%alpha)%*%Sigma.inv%*%X+mu.beta%*%Sigma.beta.inv)
-		A.inv <- solve(t(X)%*%X/(sigma2)+Sigma.beta.inv)
-		b <- t(t(y-Z%*%alpha)%*%X/(sigma2))  # +mu.beta%*%Sigma.beta.inv
-		beta <- A.inv%*%b+chol(A.inv)%*%matrix(rnorm(qX),qX,1)
+		A.inv <- solve(t(X)%*%X/sigma2+Sigma.beta.inv)
+		b <- (t(X)%*%(y-Z%*%alpha))/sigma2  # +mu.beta%*%Sigma.beta.inv
+		beta <- A.inv%*%b+t(chol(A.inv))%*%matrix(rnorm(qX),qX,1)
 
 		###
 		###  Sample sigma (standard deviation of observation model) 

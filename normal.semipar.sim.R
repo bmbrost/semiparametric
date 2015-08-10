@@ -24,7 +24,7 @@ plot(time,trend,type="l")
 # Simulate data
 sigma <- 1
 y <- rnorm(T,X%*%beta+trend,sigma)
-plot(time,y,type="l",ylim=range(c(nlt,y,X%*%beta)))
+plot(time,y,type="l",ylim=range(c(trend,y,X%*%beta)))
 lines(time,X%*%beta,col=2)
 lines(time,trend,col=3)
 
@@ -179,7 +179,7 @@ beta.hat.lme <- as.matrix(fixef(fit))
 alpha.hat.lme <- t(as.matrix(ranef(fit)))
 
 source('~/Documents/git/SemiparametricRegression/normal.semipar.mcmc.R', chdir = TRUE)
-start <- list(beta=beta,sigma=sigma,sigma.alpha=sigma.alpha)
+start <- list(beta=beta,sigma=sigma,sigma.alpha=1)
 # hist(sqrt(1/rgamma(1000,1,,2)))
 priors <- list(sigma.beta=10,r.sigma=2,q.sigma=1)
 out1 <- normal.semipar.mcmc(y,X,Z,priors=priors,start=start,sigma.alpha=NULL,n.mcmc=10000)
@@ -218,6 +218,7 @@ lines(time,y.hat.lme,col=2)
 par(mfrow=c(2,1))
 plot(time,trend,type="l")
 plot(alpha.hat,pch=19,col=rgb(0,0,0,0.25),ylim=c(range(alpha.quant)))
+lines(alpha.hat,pch=19,col=rgb(0,0,0,0.35))
 abline(h=0,col=2,lty=2)
 
 #########################################################
