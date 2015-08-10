@@ -1,23 +1,31 @@
-probit.semipar.mcmc <- function(y,X,Z,priors,start,sigma.alpha=NULL,n.mcmc){
+probit.semipar.mcmc <- function(y,X,Z,priors,start,sigma.alpha,n.mcmc){
 	
 	###
-	### Brian M. Brost (05 AUG 2015)
-	### 'Mixed' effects model for normally distributed data
+	### Brian M. Brost (10 AUG 2015)
+	### Semiparametric regression for binary data using probit link
 	###
 
 	###
 	### Model statement:
-	### y~N(X%*%beta+Z%*%alpha,sigma^2*I)
+	### y=0,u_t<=0
+	### y=1,u_t>0
+	### u_t~N(x*beta+z*alpha,1)
 	### beta~N(0,sigma.beta^2*I)
 	### alpha~N(0,sigma.alpha^2*I)
-	###	sigma^2~IG(r.sigma,q.sigma)
 	###	
 	
 	###
 	### Libraries and Subroutines
 	###
 
-	# library(pscl)  # rigamma for IG prior on sigma
+	truncnormsamp <- function(mu,sig2,low,high,nsamp){
+	  flow=pnorm(low,mu,sqrt(sig2)) 
+	  fhigh=pnorm(high,mu,sqrt(sig2)) 
+	  u=runif(nsamp) 
+	  tmp=flow+u*(fhigh-flow)
+	  x=qnorm(tmp,mu,sqrt(sig2))
+	  x
+	}
 
 	###
 	###  Setup Variables 
@@ -26,25 +34,26 @@ probit.semipar.mcmc <- function(y,X,Z,priors,start,sigma.alpha=NULL,n.mcmc){
 	n <- length(y)  # number of observations
 	qX <- ncol(X)  # number of 'fixed' effects
 	qZ <- ncol(Z)  # number of 'random' effects
-
+	y1 <- (y==1)
+	y0 <- (y==0)
+	y1.sum <- sum(y1)
+	y0.sum <- sum(y0)
+	u <- numeric(n)
+	
 	###
 	### Starting values and priors
  	###
 
 	# browser()
 	beta <- matrix(start$beta,qX)
-	# alpha <- matrix(start$alpha,qZ)
-	sigma2 <- start$sigma^2
-	sigma2.alpha <- ifelse(is.null(sigma.alpha),start$sigma.alpha^2,sigma.alpha^2)
+	alpha <- matrix(start$alpha,qZ)
 
-	# Sigma.inv <- solve(sigma2*diag(n))
-
-	mu.beta <- rep(0,qX)
+	mu.beta <- priors$mu.beta
 	Sigma.beta <- diag(qX)*priors$sigma.beta^2
 	Sigma.beta.inv <- solve(Sigma.beta)
 	
 	mu.alpha <- rep(0,qZ)
-	Sigma.alpha <- diag(qZ)*sigma2.alpha
+	Sigma.alpha <- diag(qZ)*sigma.alpha^2
 	Sigma.alpha.inv <- solve(Sigma.alpha)
 
 	###
@@ -53,9 +62,8 @@ probit.semipar.mcmc <- function(y,X,Z,priors,start,sigma.alpha=NULL,n.mcmc){
   
 	beta.save <- matrix(0,n.mcmc,qX)  # coefficients for 'fixed' effects
 	alpha.save <- matrix(0,n.mcmc,qZ)  # coefficients for 'random' effects
-	sigma.save <- numeric(n.mcmc)  # standard deviation of data model
 	sigma.alpha.save <- numeric(n.mcmc)  # standard deviation of parameter model
-	y.hat.save <- matrix(0,n,n.mcmc)
+	u.save <- matrix(0,n.mcmc,n)
 	D.bar.save <- numeric(n.mcmc)  # D.bar for DIC calculation
 		
 	###
@@ -65,72 +73,53 @@ probit.semipar.mcmc <- function(y,X,Z,priors,start,sigma.alpha=NULL,n.mcmc){
 	for (k in 1:n.mcmc) {
     	if(k%%1000==0) cat(k,"");flush.console()
 
+# browser()
+###
+		### Sample u (auxilliary variable for probit regression)
+	  	###
+	 
+		linpred <- X%*%beta+Z%*%alpha
+	  	u[y1] <- truncnormsamp(linpred[y1],1,0,Inf,y1.sum)
+	  	u[y0] <- truncnormsamp(linpred[y0],1,-Inf,0,y0.sum)
+
 		###
 		###  Sample alpha ('random' effects) 
 		###
-
-		A.inv <- solve(t(Z)%*%Z/(sigma2)+Sigma.alpha.inv)
-		b <- t(t(y-X%*%beta)%*%Z/(sigma2))  # +mu.alpha%*%Sigma.alpha.inv
-		alpha <- A.inv%*%b+chol(A.inv)%*%matrix(rnorm(qZ),qZ,1)
+# browser()
+		A.inv <- solve(t(Z)%*%Z+Sigma.alpha.inv)
+		b <- t(Z)%*%(u-X%*%beta)  # +mu.alpha%*%Sigma.alpha.inv
+		alpha <- A.inv%*%b+t(chol(A.inv))%*%matrix(rnorm(qZ),qZ,1)
 
 		###
 		###  Sample beta ('fixed' effects) 
 		###
 
-		# browser()
-		# A.inv <- solve(t(X)%*%Sigma.inv%*%X+Sigma.beta.inv)
-		# b <- t(t(y-Z%*%alpha)%*%Sigma.inv%*%X+mu.beta%*%Sigma.beta.inv)
-		A.inv <- solve(t(X)%*%X/(sigma2)+Sigma.beta.inv)
-		b <- t(t(y-Z%*%alpha)%*%X/(sigma2))  # +mu.beta%*%Sigma.beta.inv
-		beta <- A.inv%*%b+chol(A.inv)%*%matrix(rnorm(qX),qX,1)
-
-		###
-		###  Sample sigma (standard deviation of observation model) 
-		###
+	 	A.inv <- solve(t(X)%*%X+Sigma.beta.inv)
+	  	b <- t(X)%*%(u-Z%*%alpha)  # +mu.beta%*%Sigma.beta.inv
+	  	beta <- A.inv%*%b+t(chol(A.inv))%*%matrix(rnorm(qX),qX,1)
 		
-		# Using rigamma in {pscl}
-		# r.tmp <- sum((y-X%*%beta-Z%*%alpha)^2)/2+1/priors$r.sigma
-		# q.tmp <- n/2+priors$q.sigma
-		# sigma2 <- rigamma(1,q.tmp,r.tmp)
-		
-		# Using rgamm {base}
-		r.tmp <- 1/(sum((y-X%*%beta-Z%*%alpha)^2)/2+1/priors$r.sigma)
-		q.tmp <- n/2+priors$q.sigma
-		sigma2 <- 1/rgamma(1,q.tmp,,r.tmp)
-
 		###
 		###  Save samples 
 	    ###
 
 		beta.save[k,] <- beta
 		alpha.save[k,] <- alpha
-    	sigma.save[k] <- sigma2    
-    	sigma.alpha.save[k] <- sigma2.alpha
-		y.hat.save[,k] <- X%*%beta+Z%*%alpha
-		D.bar.save[k] <- -2*sum(dnorm(y,X%*%beta+Z%*%alpha,sqrt(sigma),log=TRUE))
+		u.save[k,] <- u
+	  	D.bar.save[k] <- -2*(sum(dbinom(y,1,pnorm(u),log=TRUE)))
 	}
+
+	#  Calculate DIC
+	if(qX==1)  postbetamn <- mean(beta.save)
+	if(qX>1)  postbetamn <- apply(beta.save,2,mean)
+	postumn <- apply(u.save,2,mean)
+	D.hat=-2*(sum(dbinom(y,1,pnorm(postumn),log=TRUE)))
+	D.bar <- mean(D.bar.save)
+	pD <- D.bar-D.hat
+	DIC <- D.hat+2*pD
 
 	###
 	### Write output
 	###
-
-	# Convert variance to standard deviation for output
-	sigma.save <- sqrt(sigma.save)    
-   	sigma.alpha.save <- sqrt(sigma.alpha.save)
-
-	#  Calculate DIC
-	# browser()
-	if(qX==1)  postbetamn <- mean(beta.save)
-	if(qX>1)  postbetamn <- apply(beta.save,2,mean)
-	postalphamn <- apply(alpha.save[,],2,mean)
-	postsigmamn <- mean(sigma.save)
-	D.hat <- -2*(sum(dnorm(y,X%*%postbetamn+Z%*%postalphamn,postsigmamn,log=TRUE)))
-	D.bar <- mean(D.bar.save[])
-	pD <- D.bar-D.hat
-	DIC <- D.hat+2*pD
   
-	# keep$sigma <- keep$sigma/n.mcmc
-	# cat(paste("\nsigma acceptance rate:",round(keep$sigma,2))) 
-	list(beta=beta.save,alpha=alpha.save,sigma=sigma.save,sigma.alpha=sigma.alpha.save,
-  		y.hat=y.hat.save,DIC=DIC,n.mcmc=n.mcmc)
+	list(beta=beta.save,alpha=alpha.save,u=u.save,DIC=DIC,n.mcmc=n.mcmc)
 }
