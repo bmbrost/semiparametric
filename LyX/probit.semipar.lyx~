@@ -193,24 +193,7 @@ Models of this type are typically fit using a large number of basis vectors,
 \end_inset
 
  must be selected using cross-validation or some model selection criterion.
- Model-based estimation of 
-\begin_inset Formula $\sigma_{\alpha}^{2}$
-\end_inset
-
- , i.e., 
-\begin_inset Formula $\sigma_{\alpha}^{2}\sim\text{IG}(r,q)$
-\end_inset
-
-, results in a mixed effects model similar to that implemented by the function
  
-\family typewriter
-glmer
-\family default
- (???) in the R package 
-\family typewriter
-lme
-\family default
-4.
 \end_layout
 
 \begin_layout Subsubsection*
@@ -269,15 +252,15 @@ Fixed effects (
 
 \begin_inset Formula 
 \begin{eqnarray*}
-[\boldsymbol{\beta}|\cdot] & \propto & [\mathbf{y}|\boldsymbol{\beta},\boldsymbol{\alpha},\sigma^{2}][\boldsymbol{\beta}]\\
- & \propto & {\cal N}(\mathbf{y}|\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\alpha},\mathbf{1}){\cal N}(\boldsymbol{\beta}|\mathbf{0},\sigma_{\beta}^{2}\mathbf{I})\\
- & \propto & \exp\left\{ -\frac{1}{2}\left(\mathbf{y}-(\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\alpha})\right)^{\prime}\left(\mathbf{y}-(\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\alpha})\right)\right\} \\
+[\boldsymbol{\beta}|\cdot] & \propto & [\mathbf{u}|\boldsymbol{\beta},\boldsymbol{\alpha},\sigma^{2}][\boldsymbol{\beta}]\\
+ & \propto & {\cal N}(\mathbf{u}|\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\alpha},\mathbf{1}){\cal N}(\boldsymbol{\beta}|\mathbf{0},\sigma_{\beta}^{2}\mathbf{I})\\
+ & \propto & \exp\left\{ -\frac{1}{2}\left(\mathbf{u}-(\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\alpha})\right)^{\prime}\left(\mathbf{u}-(\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\alpha})\right)\right\} \\
  &  & \qquad\exp\left\{ -\frac{1}{2}\left(\boldsymbol{\beta}-\mathbf{0}\right)^{\prime}\left(\sigma_{\beta}^{2}\mathbf{I}\right)^{-1}\left(\boldsymbol{\beta}-\mathbf{0}\right)\right\} \\
- & \propto & \exp\left\{ -\frac{1}{2}\left((\mathbf{y}-\mathbf{Z}\boldsymbol{\alpha})-\mathbf{X}\boldsymbol{\beta}\right)^{\prime}\left((\mathbf{y}-\mathbf{Z}\boldsymbol{\alpha})-\mathbf{X}\boldsymbol{\beta}\right)\right\} \\
+ & \propto & \exp\left\{ -\frac{1}{2}\left((\mathbf{u}-\mathbf{Z}\boldsymbol{\alpha})-\mathbf{X}\boldsymbol{\beta}\right)^{\prime}\left((\mathbf{u}-\mathbf{Z}\boldsymbol{\alpha})-\mathbf{X}\boldsymbol{\beta}\right)\right\} \\
  &  & \qquad\exp\left\{ -\frac{1}{2}\left(\boldsymbol{\beta}-\mathbf{0}\right)^{\prime}\left(\sigma_{\beta}^{2}\mathbf{I}\right)^{-1}\left(\boldsymbol{\beta}-\mathbf{0}\right)\right\} \\
- & \propto & \exp\left\{ -\frac{1}{2}\left(-2(\mathbf{y}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\beta}^{\prime}\mathbf{X}^{\prime}\mathbf{X}\boldsymbol{\beta}\right)\right\} \times\\
+ & \propto & \exp\left\{ -\frac{1}{2}\left(-2(\mathbf{u}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\beta}^{\prime}\mathbf{X}^{\prime}\mathbf{X}\boldsymbol{\beta}\right)\right\} \times\\
  &  & \qquad\exp\left\{ -\frac{1}{2}\left(\boldsymbol{\beta}^{\prime}\left(\sigma_{\beta}^{2}\mathbf{I}\right)^{-1}\boldsymbol{\beta}\right)\right\} \\
- & \propto & \exp\left\{ -\frac{1}{2}\left(-2\left((\mathbf{y}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}\mathbf{X}\right)\boldsymbol{\beta}+\boldsymbol{\beta}^{\prime}\left(\mathbf{X}^{\prime}\mathbf{X}+\left(\sigma_{\beta}^{2}\mathbf{I}\right)^{-1}\right)\boldsymbol{\beta}\right)\right\} \times\\
+ & \propto & \exp\left\{ -\frac{1}{2}\left(-2\left((\mathbf{u}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}\mathbf{X}\right)\boldsymbol{\beta}+\boldsymbol{\beta}^{\prime}\left(\mathbf{X}^{\prime}\mathbf{X}+\left(\sigma_{\beta}^{2}\mathbf{I}\right)^{-1}\right)\boldsymbol{\beta}\right)\right\} \times\\
  & = & {\cal N}(\mathbf{A}^{-1}\mathbf{b},\mathbf{A}^{-1})
 \end{eqnarray*}
 
@@ -288,7 +271,7 @@ where
 \end_inset
 
  and 
-\begin_inset Formula $\mathbf{b}^{\prime}=(\mathbf{y}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}\mathbf{X}$
+\begin_inset Formula $\mathbf{b}^{\prime}=(\mathbf{u}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}\mathbf{X}$
 \end_inset
 
 .
@@ -314,8 +297,8 @@ Random effects (
 
 \begin_inset Formula 
 \begin{eqnarray*}
-[\boldsymbol{\alpha}|\cdot] & \propto & [\mathbf{y}|\boldsymbol{\beta},\boldsymbol{\alpha},\sigma^{2}][\boldsymbol{\alpha}]\\
- & \propto & {\cal N}(\mathbf{y}|\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\alpha},\mathbf{1}){\cal N}(\boldsymbol{\alpha}|\mathbf{0},\sigma_{\alpha}^{2}\mathbf{I})\\
+[\boldsymbol{\alpha}|\cdot] & \propto & [\mathbf{u}|\boldsymbol{\beta},\boldsymbol{\alpha},\sigma^{2}][\boldsymbol{\alpha}]\\
+ & \propto & {\cal N}(\mathbf{u}|\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\alpha},\mathbf{1}){\cal N}(\boldsymbol{\alpha}|\mathbf{0},\sigma_{\alpha}^{2}\mathbf{I})\\
  & = & {\cal N}(\mathbf{A}^{-1}\mathbf{b},\mathbf{A}^{-1})
 \end{eqnarray*}
 
@@ -326,7 +309,7 @@ where
 \end_inset
 
  and 
-\begin_inset Formula $\mathbf{b}^{\prime}=(\mathbf{y}-\mathbf{X}\boldsymbol{\beta})^{\prime}\mathbf{Z}$
+\begin_inset Formula $\mathbf{b}^{\prime}=(\mathbf{u}-\mathbf{X}\boldsymbol{\beta})^{\prime}\mathbf{Z}$
 \end_inset
 
 .

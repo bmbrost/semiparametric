@@ -193,24 +193,6 @@ Models of this type are typically fit using a large number of basis vectors,
 \end_inset
 
  must be selected using cross-validation or some model selection criterion.
- Model-based estimation of 
-\begin_inset Formula $\sigma_{\alpha}^{2}$
-\end_inset
-
- , i.e., 
-\begin_inset Formula $\sigma_{\alpha}^{2}\sim\text{IG}(r,q)$
-\end_inset
-
-, results in a mixed effects model similar to that implemented by the function
- 
-\family typewriter
-glmer
-\family default
- (???) in the R package 
-\family typewriter
-lme
-\family default
-4.
 \end_layout
 
 \begin_layout Subsubsection*
