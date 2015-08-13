@@ -193,7 +193,6 @@ Models of this type are typically fit using a large number of basis vectors,
 \end_inset
 
  must be selected using cross-validation or some model selection criterion.
- 
 \end_layout
 
 \begin_layout Subsubsection*

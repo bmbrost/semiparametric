@@ -203,7 +203,7 @@ Full conditional distributions
 \noindent
 
 \emph on
-Observation model auxiliary variable (
+Auxiliary variable for binary observation model (
 \begin_inset Formula $u_{t}$
 \end_inset
 
