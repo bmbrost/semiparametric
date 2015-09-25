@@ -160,7 +160,8 @@ Let
 \mathbf{y} & \sim & {\cal N}(\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\alpha},\sigma^{2}\mathbf{I})\\
 \boldsymbol{\beta} & \sim & {\cal N}(\mathbf{0},\sigma_{\beta}^{2}\mathbf{I})\\
 \boldsymbol{\alpha} & \sim & {\cal N}(\mathbf{0},\sigma_{\alpha}^{2}\mathbf{I})\\
-\sigma^{2} & \sim & \text{IG}(r,q)
+\sigma^{2} & \sim & \text{IG}(r_{\sigma},q_{\sigma})\\
+\sigma_{\alpha}^{2} & \sim & \text{IG}(r_{\sigma_{\alpha}},q_{\sigma_{\alpha}})
 \end{eqnarray*}
 
 \end_inset
@@ -173,12 +174,13 @@ Models of this type are typically fit using a large number of basis vectors,
 \end_inset
 
  toward 0 where appropriate.
- Therefore, the parameter 
+ The parameter 
 \begin_inset Formula $\sigma_{\alpha}^{2}$
 \end_inset
 
- must be selected using cross-validation or some model selection criterion.
- Model-based estimation of 
+ can be selected using cross-validation or some model selection criterion
+ to optimize predictive ability.
+ Alternatively, model-based estimation of 
 \begin_inset Formula $\sigma_{\alpha}^{2}$
 \end_inset
 
@@ -304,18 +306,53 @@ Observation error (
 \begin_inset Formula 
 \begin{eqnarray*}
 [\sigma^{2}|\cdot] & \propto & [\mathbf{y}|\boldsymbol{\beta},\boldsymbol{\alpha},\sigma^{2}][\sigma^{2}]\\
- & \propto & {\cal N}(\mathbf{y}|\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\alpha},\sigma^{2}\mathbf{I})\text{IG}(r,q)\\
+ & \propto & {\cal N}(\mathbf{y}|\mathbf{X}\boldsymbol{\beta}+\mathbf{Z}\boldsymbol{\alpha},\sigma^{2}\mathbf{I})\text{IG}(r_{\sigma},q_{\sigma})\\
  & \propto & |\sigma^{2}\mathbf{\text{\textbf{I}}}|^{-1/2}\exp\left\{ -\frac{1}{2}\left((\mathbf{y}-\mathbf{X}\boldsymbol{\beta}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}\left(\sigma^{2}\text{\textbf{I}}\right)^{-1}(\mathbf{y}-\mathbf{X}\boldsymbol{\beta}-\mathbf{Z}\boldsymbol{\alpha})\right)\right\} \times\\
- &  & \qquad\left(\sigma^{2}\right)^{-(q+1)}\exp\left\{ -\frac{1}{r\sigma^{2}}\right\} \\
+ &  & \qquad\left(\sigma^{2}\right)^{-(q_{\sigma}+1)}\exp\left\{ -\frac{1}{r_{\sigma}\sigma^{2}}\right\} \\
  & \propto & \left(\sigma^{2}\right)^{-T/2}\exp\left\{ -\frac{1}{2\sigma^{2}}\left((\mathbf{y}-\mathbf{X}\boldsymbol{\beta}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}(\mathbf{y}-\mathbf{X}\boldsymbol{\beta}-\mathbf{Z}\boldsymbol{\alpha})\right)\right\} \\
- &  & \qquad\left(\sigma^{2}\right)^{-(q+1)}\exp\left\{ -\frac{1}{r\sigma^{2}}\right\} \\
- & \propto & \left(\sigma^{2}\right)^{-(T/2+q+1)}\exp\left\{ -\frac{1}{\sigma^{2}}\left(\frac{(\mathbf{y}-\mathbf{X}\boldsymbol{\beta}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}(\mathbf{y}-\mathbf{X}\boldsymbol{\beta}-\mathbf{Z}\boldsymbol{\alpha})}{2}+\frac{1}{r}\right)\right\} \\
- & = & \text{IG}\left(\left(\frac{(\mathbf{y}-\mathbf{X}\boldsymbol{\beta}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}(\mathbf{y}-\mathbf{X}\boldsymbol{\beta}-\mathbf{Z}\boldsymbol{\alpha})}{2}+\frac{1}{r}\right)^{-1},\frac{T}{2}+q\right)
+ &  & \qquad\left(\sigma^{2}\right)^{-(q_{\sigma}+1)}\exp\left\{ -\frac{1}{r_{\sigma}\sigma^{2}}\right\} \\
+ & \propto & \left(\sigma^{2}\right)^{-(T/2+q+1)}\exp\left\{ -\frac{1}{\sigma^{2}}\left(\frac{(\mathbf{y}-\mathbf{X}\boldsymbol{\beta}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}(\mathbf{y}-\mathbf{X}\boldsymbol{\beta}-\mathbf{Z}\boldsymbol{\alpha})}{2}+\frac{1}{r_{\sigma}}\right)\right\} \\
+ & = & \text{IG}\left(\left(\frac{(\mathbf{y}-\mathbf{X}\boldsymbol{\beta}-\mathbf{Z}\boldsymbol{\alpha})^{\prime}(\mathbf{y}-\mathbf{X}\boldsymbol{\beta}-\mathbf{Z}\boldsymbol{\alpha})}{2}+\frac{1}{r_{\sigma}}\right)^{-1},\frac{T}{2}+q_{\sigma}\right)
 \end{eqnarray*}
 
 \end_inset
 
 
+\emph on
+Variance of random effects (
+\begin_inset Formula $\sigma_{\alpha}^{2}$
+\end_inset
+
+):
+\emph default
+
+\begin_inset Formula 
+\begin{eqnarray*}
+[\sigma_{\alpha}^{2}|\cdot] & \propto & [\boldsymbol{\alpha}|\mathbf{0},\sigma_{\alpha}^{2}][\sigma_{\alpha}^{2}]\\
+ & \propto & {\cal N}(\boldsymbol{\alpha}|\mathbf{0},\sigma_{\alpha}^{2}\mathbf{I})\text{IG}(r_{\sigma_{\alpha}},q_{\sigma_{\alpha}})\\
+ & \propto & |\sigma_{\alpha}^{2}\mathbf{\text{\textbf{I}}}|^{-1/2}\exp\left\{ -\frac{1}{2}\left((\boldsymbol{\alpha}-\mathbf{0})^{\prime}\left(\sigma_{\alpha}^{2}\text{\textbf{I}}\right)^{-1}(\boldsymbol{\alpha}-\mathbf{0})\right)\right\} \times\\
+ &  & \qquad\left(\sigma_{\alpha}^{2}\right)^{-(q_{\sigma_{\alpha}}+1)}\exp\left\{ -\frac{1}{r_{\sigma_{\alpha}}\sigma_{\alpha}^{2}}\right\} \\
+ & \propto & \left(\sigma_{\alpha}^{2}\right)^{-M/2}\exp\left\{ -\frac{1}{2\sigma_{\alpha}^{2}}\boldsymbol{\alpha}^{\prime}\boldsymbol{\alpha}\right\} \\
+ &  & \qquad\left(\sigma_{\alpha}^{2}\right)^{-(q_{\sigma_{\alpha}}+1)}\exp\left\{ -\frac{1}{r_{\sigma_{\alpha}}\sigma_{\alpha}^{2}}\right\} \\
+ & \propto & \left(\sigma_{\alpha}^{2}\right)^{-(M/2+q_{\alpha}+1)}\exp\left\{ -\frac{1}{\sigma_{\alpha}^{2}}\left(\frac{\boldsymbol{\alpha}^{\prime}\boldsymbol{\alpha}}{2}+\frac{1}{r_{\sigma_{\alpha}}}\right)\right\} \\
+ & = & \text{IG}\left(\left(\frac{\boldsymbol{\alpha}{}^{\prime}\boldsymbol{\alpha}}{2}+\frac{1}{r_{\sigma_{\alpha}}}\right)^{-1},\frac{M}{2}+q_{\sigma_{\alpha}}\right)
+\end{eqnarray*}
+
+\end_inset
+
+where 
+\begin_inset Formula $M$
+\end_inset
+
+ is the length of 
+\begin_inset Formula $\boldsymbol{\alpha}$
+\end_inset
+
+ (or column dimension of 
+\begin_inset Formula $\mathbf{Z}$
+\end_inset
+
+).
 \end_layout
 
 \end_body

@@ -168,7 +168,11 @@ Let
 Models of this type are typically fit using a large number of basis vectors,
  more than necessary to approximate non-linear trends or dependence.
  Regularization (e.g., a ridge penalty) is subsequently conducted to shrink
- the coefficients toward 0 where appropriate.
+ the coefficients 
+\begin_inset Formula $\boldsymbol{\alpha}$
+\end_inset
+
+ toward 0 where appropriate.
  Therefore, the parameter 
 \begin_inset Formula $\sigma_{\alpha}^{2}$
 \end_inset
