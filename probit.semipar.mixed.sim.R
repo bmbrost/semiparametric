@@ -4,6 +4,7 @@
 
 rm(list=ls())
 library(mvtnorm)
+library(splines)
 
 T <- 100  # number of observations per group
 J <- 10  # number of groups
@@ -17,7 +18,7 @@ qX <- ncol(X)
 X[,2] <- scale(X[,2])
 
 mu.beta <- matrix(c(-1,1.25),,1)  # mean of betas
-rho <- 0.5  # correlation between betas
+rho <- 0.0  # correlation between betas
 Lambda <- diag(qX)*1  # variance-covariance of betas
 Lambda[1,2] <- Lambda[2,1] <- Lambda[1,1]*Lambda[2,2]*rho
 
@@ -62,7 +63,7 @@ priors <- list(sigma.beta=10,S0=diag(qX),nu=qX+1,r=2,q=1)
 out1 <- probit.semipar.mixed.mcmc(y,X,g,W,priors,start,10000)
 
 # Examine estimates for beta_j and alpha_j
-g.idx <- 3  # group idx for plotting beta_j
+g.idx <- 10  # group idx for plotting beta_j
 matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
 idx.tmp <- sample(1:qW[g.idx],3)
 matplot(out1$alpha[[g.idx]][,idx.tmp],type="l",lty=1)
@@ -85,6 +86,7 @@ matplot(out1$mu.beta,type="l");abline(h=mu.beta,col=1:qX,lty=2)
 # Examine estimates for Lambda
 matplot(cbind(out1$Lambda[1,1,],out1$Lambda[1,2,]),type="l")
 abline(h=c(Lambda[1,1],Lambda[1,2]),lty=2,col=1:qX)
+mean(out1$Lambda[1,1,])
 
 # Examine estimates for sigma.alpha
 matplot(out1$sigma.alpha,type="l")

@@ -58,7 +58,7 @@ probit.semipar.mixed.mcmc <- function(y,X,g,W,priors,start,n.mcmc){
 	mu.beta <- matrix(start$mu.beta,qX,1)
 	Lambda <- start$Lambda
 	Lambda.inv <- solve(Lambda)
-xi <- rep(1,qX)
+xi <- rep(1.5,qX)
 	Sigma.alpha <- lapply(qW,function(x) diag(x)*start$sigma.alpha^2)
 	Sigma.alpha.inv <- lapply(Sigma.alpha,solve)
 	W.cross <- lapply(W,crossprod)  # t(W)%*%Wcross product of W
@@ -152,39 +152,40 @@ xi <- rep(1,qX)
 	  	Sn <- S0+crossprod(t(beta)-matrix(mu.beta,J,2,byrow=TRUE))
 		Q <- solve(rWishart(1,nu+J,solve(Sn))[,,1])
 		
-		Lambda <- solve(rWishart(1,nu+J,solve(Sn))[,,1])
+		# Lambda <- solve(rWishart(1,nu+J,solve(Sn))[,,1])
 		# Lambda.inv <- solve(Lambda)
 		
 		###
 		### Sample xi (scaling factors)
 		###
-# browser()	
-		xi.star <- rnorm(qX,xi,0.025)
-		idx <- which(xi>0)
+# browser()
+
+		xi.star <- rnorm(qX,xi,0.01)
+		idx <- which(xi>0 & xi<100)
 		for(i in idx){
 # i <- 2
 			xi.tmp <- xi
 			xi.tmp[i] <- xi.star[i]
 			Lambda.star <- (diag(qX)*xi.tmp)%*%Q%*%(diag(qX)*xi.tmp)
-
+# browser()
 			# Q[1,1]*xi.star[1]^2
 			# Q[1,2]*xi.star[1]*xi[2]
+			# Q[2,2]*xi[2]^2
 			# Q[2,2]*xi.star[2]^2
 			# Q[1,2]*xi[1]*xi.star[2]
-# browser()			
 
 			mh.star.xi <- sum(dmvnorm(t(beta),mu.beta,Lambda.star,log=TRUE))
 			mh.0.xi <- sum(dmvnorm(t(beta),mu.beta,Lambda,log=TRUE))
 
 			if(exp(mh.star.xi-mh.0.xi)>runif(1)){
-	        	xi[i] <- xi.star[i]
+	        	# xi[i] <- xi.star[i]
 				Lambda <- Lambda.star
 				keep$xi <- keep$xi+1
 				# keep.tmp$sigma.mu <- keep.tmp$sigma.mu+1
 	    	} 
 		}		
 
-		Lambda.inv <- solve(Lambda)
+		# Lambda.inv <- solve(Lambda)
 				
 	  	###
 	  	### Save Samples 
