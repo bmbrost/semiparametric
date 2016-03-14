@@ -1,0 +1,404 @@
+rm(list=ls())#
+library(mvtnorm)#
+#
+T <- 100  # number of observations per group#
+J <- 10  # number of groups#
+g <- rep(1:J,each=T)  # grouping variable#
+#
+# Define covariates#
+time <- c(replicate(J,c(rgamma(1,shape=10.1,scale=4.5),#
+	cumsum(rgamma(T-1,shape=1.1,scale=4.5)))))  # time covariate#
+X <- cbind(1,time)#
+qX <- ncol(X)#
+X[,2] <- scale(X[,2])#
+#
+mu.beta <- matrix(c(-1,1.25),,1)  # mean of betas#
+rho <- 0.5  # correlation between betas#
+Lambda <- diag(qX)*1  # variance-covariance of betas#
+Lambda[1,2] <- Lambda[2,1] <- Lambda[1,1]*Lambda[2,2]*rho
+beta <- t(rmvnorm(J,mu.beta,Lambda))  # betas for each group#
+plot(t(beta))
+int <- 50  # interval between knots#
+tapply(time,g,range)
+W <- sapply(1:J,function(x) bs(time[g==x],degree=3,intercept=FALSE,#
+	knots=seq(min(time[g==x]),max(time[g==x]),by=int)),simplify=FALSE)#
+qW <- unlist(lapply(W,ncol))
+??bs
+library(splines)
+W <- sapply(1:J,function(x) bs(time[g==x],degree=3,intercept=FALSE,#
+	knots=seq(min(time[g==x]),max(time[g==x]),by=int)),simplify=FALSE)#
+qW <- unlist(lapply(W,ncol))
+sigma.alpha <- 1#
+alpha <- lapply(qW,function(x) t(rmvnorm(1,rep(0,x),sigma.alpha^2*diag(x))))#
+trend <- sapply(1:J,function(x) W[[x]]%*%alpha[[x]])#
+matplot(trend,type="l",lty=1)#
+trend <- c(trend)
+beta.tmp <- t(beta[,g])#
+p <- pnorm(rowSums(X*beta.tmp)+trend)#
+hist(p);summary(p)
+y <- rbinom(T*J,1,p)#
+table(y)#
+plot(p,y)
+plot(time,y,ylim=range(c(trend,y,rowSums(X*beta.tmp))))#
+matplot(matrix(time,T,J),matrix(rowSums(X*beta.tmp),T,J),col=2,type="l",lty=2,add=TRUE)#
+matplot(matrix(time,T,J),matrix(trend,T,J),col=3,type="l",lty=2,add=TRUE)#
+matplot(matrix(time,T,J),matrix(rowSums(X*beta.tmp)+trend,T,J),#
+	col=4,type="l",lty=2,add=TRUE)
+start <- list(beta=beta,mu.beta=mu.beta,Lambda=Lambda,sigma.alpha=sigma.alpha,alpha=alpha)#
+priors <- list(sigma.beta=10,S0=diag(qX),nu=qX+1,r=2,q=1)#
+out1 <- probit.semipar.mixed.mcmc(y,X,g,W,priors,start,1000)
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mixed.mcmc.R')
+start <- list(beta=beta,mu.beta=mu.beta,Lambda=Lambda,sigma.alpha=sigma.alpha,alpha=alpha)#
+priors <- list(sigma.beta=10,S0=diag(qX),nu=qX+1,r=2,q=1)#
+out1 <- probit.semipar.mixed.mcmc(y,X,g,W,priors,start,1000)
+g.idx <- 3  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 1  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 3  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 6  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+matplot(out1$xi,type="l")
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mixed.mcmc.R')#
+start <- list(beta=beta,mu.beta=mu.beta,Lambda=Lambda,sigma.alpha=sigma.alpha,alpha=alpha)#
+priors <- list(sigma.beta=10,S0=diag(qX),nu=qX+1,r=2,q=1)#
+out1 <- probit.semipar.mixed.mcmc(y,X,g,W,priors,start,1000)
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mixed.mcmc.R')#
+start <- list(beta=beta,mu.beta=mu.beta,Lambda=Lambda,sigma.alpha=sigma.alpha,alpha=alpha)#
+priors <- list(sigma.beta=10,S0=diag(qX),nu=qX+1,r=2,q=1)#
+out1 <- probit.semipar.mixed.mcmc(y,X,g,W,priors,start,1000)
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mixed.mcmc.R')#
+start <- list(beta=beta,mu.beta=mu.beta,Lambda=Lambda,sigma.alpha=sigma.alpha,alpha=alpha)#
+priors <- list(sigma.beta=10,S0=diag(qX),nu=qX+1,r=2,q=1)#
+out1 <- probit.semipar.mixed.mcmc(y,X,g,W,priors,start,1000)
+g.idx <- 6  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 1  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 2  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 3  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 4  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 5  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 7  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 8  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 9  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 10  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mcmc.R', chdir = TRUE)#
+start <- list(beta=c(beta[,g.idx]),alpha=c(alpha[[g.idx]]))#
+# hist(sqrt(1/rgamma(1000,1,,2)),breaks=100)#
+priors <- list(mu.beta=rep(0,qX),sigma.beta=10)#
+out2 <- probit.semipar.mcmc(y[g==g.idx],X[g==g.idx,],W[[g.idx]],#
+	priors=priors,start=start,sigma.alpha=sigma.alpha,n.mcmc=1000)#
+matplot(out2$beta,type="l");abline(h=beta[,g.idx],col=1:qX)
+g.idx <- 9  # group idx for plotting beta_j#
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mcmc.R', chdir = TRUE)#
+start <- list(beta=c(beta[,g.idx]),alpha=c(alpha[[g.idx]]))#
+# hist(sqrt(1/rgamma(1000,1,,2)),breaks=100)#
+priors <- list(mu.beta=rep(0,qX),sigma.beta=10)#
+out2 <- probit.semipar.mcmc(y[g==g.idx],X[g==g.idx,],W[[g.idx]],#
+	priors=priors,start=start,sigma.alpha=sigma.alpha,n.mcmc=1000)#
+matplot(out2$beta,type="l");abline(h=beta[,g.idx],col=1:qX)
+mu.beta <- matrix(c(-1,1.25),,1)  # mean of betas#
+rho <- 0.25  # correlation between betas#
+Lambda <- diag(qX)*1  # variance-covariance of betas#
+Lambda[1,2] <- Lambda[2,1] <- Lambda[1,1]*Lambda[2,2]*rho
+beta <- t(rmvnorm(J,mu.beta,Lambda))  # betas for each group#
+plot(t(beta))#
+# Basis expansion#
+int <- 50  # interval between knots#
+tapply(time,g,range)#
+#
+# List of basis exansions, 1 per group#
+W <- sapply(1:J,function(x) bs(time[g==x],degree=3,intercept=FALSE,#
+	knots=seq(min(time[g==x]),max(time[g==x]),by=int)),simplify=FALSE)#
+qW <- unlist(lapply(W,ncol))#
+#
+sigma.alpha <- 1#
+alpha <- lapply(qW,function(x) t(rmvnorm(1,rep(0,x),sigma.alpha^2*diag(x))))#
+trend <- sapply(1:J,function(x) W[[x]]%*%alpha[[x]])#
+matplot(trend,type="l",lty=1)#
+trend <- c(trend)#
+#
+# Simulate data#
+beta.tmp <- t(beta[,g])#
+p <- pnorm(rowSums(X*beta.tmp)+trend)#
+hist(p);summary(p)#
+#
+y <- rbinom(T*J,1,p)#
+table(y)#
+plot(p,y)#
+#
+plot(time,y,ylim=range(c(trend,y,rowSums(X*beta.tmp))))#
+matplot(matrix(time,T,J),matrix(rowSums(X*beta.tmp),T,J),col=2,type="l",lty=2,add=TRUE)#
+matplot(matrix(time,T,J),matrix(trend,T,J),col=3,type="l",lty=2,add=TRUE)#
+matplot(matrix(time,T,J),matrix(rowSums(X*beta.tmp)+trend,T,J),#
+	col=4,type="l",lty=2,add=TRUE)
+matplot(out1$mu.beta,type="l");abline(h=mu.beta,col=1:qX,lty=2)
+matplot(cbind(out1$Lambda[1,1,],out1$Lambda[1,2,]),type="l")
+abline(h=c(Lambda[1,1],Lambda[1,2]),lty=2,col=1:qX)
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mixed.mcmc.R')#
+start <- list(beta=beta,mu.beta=mu.beta,Lambda=Lambda,sigma.alpha=sigma.alpha,alpha=alpha)#
+priors <- list(sigma.beta=10,S0=diag(qX),nu=qX+1,r=2,q=1)#
+out1 <- probit.semipar.mixed.mcmc(y,X,g,W,priors,start,1000)
+g.idx <- 9  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 1  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+beta[,g.idx]
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mcmc.R', chdir = TRUE)#
+start <- list(beta=c(beta[,g.idx]),alpha=c(alpha[[g.idx]]))#
+# hist(sqrt(1/rgamma(1000,1,,2)),breaks=100)#
+priors <- list(mu.beta=rep(0,qX),sigma.beta=10)#
+out2 <- probit.semipar.mcmc(y[g==g.idx],X[g==g.idx,],W[[g.idx]],#
+	priors=priors,start=start,sigma.alpha=sigma.alpha,n.mcmc=1000)#
+matplot(out2$beta,type="l");abline(h=beta[,g.idx],col=1:qX)
+g.idx <- 2  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mcmc.R', chdir = TRUE)#
+start <- list(beta=c(beta[,g.idx]),alpha=c(alpha[[g.idx]]))#
+# hist(sqrt(1/rgamma(1000,1,,2)),breaks=100)#
+priors <- list(mu.beta=rep(0,qX),sigma.beta=10)#
+out2 <- probit.semipar.mcmc(y[g==g.idx],X[g==g.idx,],W[[g.idx]],#
+	priors=priors,start=start,sigma.alpha=sigma.alpha,n.mcmc=1000)#
+matplot(out2$beta,type="l");abline(h=beta[,g.idx],col=1:qX)
+g.idx <- 3  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mcmc.R', chdir = TRUE)#
+start <- list(beta=c(beta[,g.idx]),alpha=c(alpha[[g.idx]]))#
+# hist(sqrt(1/rgamma(1000,1,,2)),breaks=100)#
+priors <- list(mu.beta=rep(0,qX),sigma.beta=10)#
+out2 <- probit.semipar.mcmc(y[g==g.idx],X[g==g.idx,],W[[g.idx]],#
+	priors=priors,start=start,sigma.alpha=sigma.alpha,n.mcmc=1000)#
+matplot(out2$beta,type="l");abline(h=beta[,g.idx],col=1:qX)
+g.idx <- 4  # group idx for plotting beta_j#
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mcmc.R', chdir = TRUE)#
+start <- list(beta=c(beta[,g.idx]),alpha=c(alpha[[g.idx]]))#
+# hist(sqrt(1/rgamma(1000,1,,2)),breaks=100)#
+priors <- list(mu.beta=rep(0,qX),sigma.beta=10)#
+out2 <- probit.semipar.mcmc(y[g==g.idx],X[g==g.idx,],W[[g.idx]],#
+	priors=priors,start=start,sigma.alpha=sigma.alpha,n.mcmc=1000)#
+matplot(out2$beta,type="l");abline(h=beta[,g.idx],col=1:qX)
+matplot(out1$mu.beta,type="l");abline(h=mu.beta,col=1:qX,lty=2)
+rho <- 0.0  # correlation between betas
+Lambda <- diag(qX)*1  # variance-covariance of betas#
+Lambda[1,2] <- Lambda[2,1] <- Lambda[1,1]*Lambda[2,2]*rho#
+#
+beta <- t(rmvnorm(J,mu.beta,Lambda))  # betas for each group#
+plot(t(beta))#
+# Basis expansion#
+int <- 50  # interval between knots#
+tapply(time,g,range)#
+#
+# List of basis exansions, 1 per group#
+W <- sapply(1:J,function(x) bs(time[g==x],degree=3,intercept=FALSE,#
+	knots=seq(min(time[g==x]),max(time[g==x]),by=int)),simplify=FALSE)#
+qW <- unlist(lapply(W,ncol))#
+#
+sigma.alpha <- 1#
+alpha <- lapply(qW,function(x) t(rmvnorm(1,rep(0,x),sigma.alpha^2*diag(x))))#
+trend <- sapply(1:J,function(x) W[[x]]%*%alpha[[x]])#
+matplot(trend,type="l",lty=1)#
+trend <- c(trend)#
+#
+# Simulate data#
+beta.tmp <- t(beta[,g])#
+p <- pnorm(rowSums(X*beta.tmp)+trend)#
+hist(p);summary(p)#
+#
+y <- rbinom(T*J,1,p)#
+table(y)#
+plot(p,y)#
+#
+plot(time,y,ylim=range(c(trend,y,rowSums(X*beta.tmp))))#
+matplot(matrix(time,T,J),matrix(rowSums(X*beta.tmp),T,J),col=2,type="l",lty=2,add=TRUE)#
+matplot(matrix(time,T,J),matrix(trend,T,J),col=3,type="l",lty=2,add=TRUE)#
+matplot(matrix(time,T,J),matrix(rowSums(X*beta.tmp)+trend,T,J),#
+	col=4,type="l",lty=2,add=TRUE)
+abline(h=c(Lambda[1,1],Lambda[1,2]),lty=2,col=1:qX)
+matplot(cbind(out1$Lambda[1,1,],out1$Lambda[1,2,]),type="l")
+abline(h=c(Lambda[1,1],Lambda[1,2]),lty=2,col=1:qX)
+mean(out1$Lambda[1,1,])
+matplot(out1$xi,type="l")
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mixed.mcmc.R')#
+start <- list(beta=beta,mu.beta=mu.beta,Lambda=Lambda,sigma.alpha=sigma.alpha,alpha=alpha)#
+priors <- list(sigma.beta=10,S0=diag(qX),nu=qX+1,r=2,q=1)#
+out1 <- probit.semipar.mixed.mcmc(y,X,g,W,priors,start,10000)
+g.idx <- 4  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+matplot(out1$xi,type="l")
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mixed.mcmc.R')#
+start <- list(beta=beta,mu.beta=mu.beta,Lambda=Lambda,sigma.alpha=sigma.alpha,alpha=alpha)#
+priors <- list(sigma.beta=10,S0=diag(qX),nu=qX+1,r=2,q=1)#
+out1 <- probit.semipar.mixed.mcmc(y,X,g,W,priors,start,10000)
+matplot(out1$xi,type="l")
+matplot(cbind(out1$Lambda[1,1,],out1$Lambda[1,2,]),type="l")
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mixed.mcmc.R')#
+start <- list(beta=beta,mu.beta=mu.beta,Lambda=Lambda,sigma.alpha=sigma.alpha,alpha=alpha)#
+priors <- list(sigma.beta=10,S0=diag(qX),nu=qX+1,r=2,q=1)#
+out1 <- probit.semipar.mixed.mcmc(y,X,g,W,priors,start,10000)
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mixed.mcmc.R')#
+start <- list(beta=beta,mu.beta=mu.beta,Lambda=Lambda,sigma.alpha=sigma.alpha,alpha=alpha)#
+priors <- list(sigma.beta=10,S0=diag(qX),nu=qX+1,r=2,q=1)#
+out1 <- probit.semipar.mixed.mcmc(y,X,g,W,priors,start,10000)
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mixed.mcmc.R')#
+start <- list(beta=beta,mu.beta=mu.beta,Lambda=Lambda,sigma.alpha=sigma.alpha,alpha=alpha)#
+priors <- list(sigma.beta=10,S0=diag(qX),nu=qX+1,r=2,q=1)#
+out1 <- probit.semipar.mixed.mcmc(y,X,g,W,priors,start,10000)
+g.idx <- 4  # group idx for plotting beta_j#
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+matplot(cbind(out1$Lambda[1,1,],out1$Lambda[1,2,]),type="l")
+abline(h=c(Lambda[1,1],Lambda[1,2]),lty=2,col=1:qX)
+g.idx <- 1  # group idx for plotting beta_j#
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 2  # group idx for plotting beta_j#
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mcmc.R', chdir = TRUE)#
+start <- list(beta=c(beta[,g.idx]),alpha=c(alpha[[g.idx]]))#
+# hist(sqrt(1/rgamma(1000,1,,2)),breaks=100)#
+priors <- list(mu.beta=rep(0,qX),sigma.beta=10)#
+out2 <- probit.semipar.mcmc(y[g==g.idx],X[g==g.idx,],W[[g.idx]],#
+	priors=priors,start=start,sigma.alpha=sigma.alpha,n.mcmc=1000)#
+matplot(out2$beta,type="l");abline(h=beta[,g.idx],col=1:qX)
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mixed.mcmc.R')#
+start <- list(beta=beta,mu.beta=mu.beta,Lambda=Lambda,sigma.alpha=sigma.alpha,alpha=alpha)#
+priors <- list(sigma.beta=10,S0=diag(qX),nu=qX+1,r=2,q=1)#
+out1 <- probit.semipar.mixed.mcmc(y,X,g,W,priors,start,10000)
+g.idx <- 2  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 10  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 2  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 3  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 4  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 5  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 6  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 5  # group idx for plotting beta_j
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mcmc.R', chdir = TRUE)#
+start <- list(beta=c(beta[,g.idx]),alpha=c(alpha[[g.idx]]))#
+# hist(sqrt(1/rgamma(1000,1,,2)),breaks=100)#
+priors <- list(mu.beta=rep(0,qX),sigma.beta=10)#
+out2 <- probit.semipar.mcmc(y[g==g.idx],X[g==g.idx,],W[[g.idx]],#
+	priors=priors,start=start,sigma.alpha=sigma.alpha,n.mcmc=1000)#
+matplot(out2$beta,type="l");abline(h=beta[,g.idx],col=1:qX)
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 7  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 8  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 9  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 10  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+matplot(out1$xi,type="l")
+matplot(out1$mu.beta,type="l");abline(h=mu.beta,col=1:qX,lty=2)
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mixed.mcmc.R')#
+start <- list(beta=beta,mu.beta=mu.beta,Lambda=Lambda,sigma.alpha=sigma.alpha,alpha=alpha)#
+priors <- list(sigma.beta=10,S0=diag(qX),nu=qX+1,r=2,q=1)#
+out1 <- probit.semipar.mixed.mcmc(y,X,g,W,priors,start,10000)
+Lambda.star
+Lambda
+xi.tmp
+1.5*1.5
+Q
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mixed.mcmc.R')#
+start <- list(beta=beta,mu.beta=mu.beta,Lambda=Lambda,sigma.alpha=sigma.alpha,alpha=alpha)#
+priors <- list(sigma.beta=10,S0=diag(qX),nu=qX+1,r=2,q=1)#
+out1 <- probit.semipar.mixed.mcmc(y,X,g,W,priors,start,10000)
+solve(rWishart(1,nu+J,solve(Sn))[,,1])
+1.5^2*.75
+test <- Q
+test
+solve(rWishart(1,nu+J,solve(Sn))[,,1])
+solve(rWishart(1,nu+J,solve(Sn))[,,1])
+solve(rWishart(1,nu+J,solve(Sn))[,,1])
+S0
+(diag(qX)*xi.tmp)%*%Q%*%(diag(qX)*xi.tmp)
+xi.star
+1.48^2*Q[1,1]
+Lambda.star
+xi.star[1]^2*Q[1,1]
+Q[1,2]*xi.star[1]*xi[2]
+Q[1,2]*xi[1]*xi.star[2]
+Q[2,2]*xi.star[2]^2
+# Q[2,2]*xi[2]^2
+Q[2,2]*xi[2]^2
+t(beta)
+Lambda
+mh.star.xi <- sum(dmvnorm(t(beta),mu.beta,Lambda.star,log=TRUE))
+mh.0.xi <- sum(dmvnorm(t(beta),mu.beta,Lambda,log=TRUE))
+exp(mh.star.xi-mh.0.xi)
+xi
+Q
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mixed.mcmc.R')#
+start <- list(beta=beta,mu.beta=mu.beta,Lambda=Lambda,sigma.alpha=sigma.alpha,alpha=alpha)#
+priors <- list(sigma.beta=10,S0=diag(qX),nu=qX+1,r=2,q=1)#
+out1 <- probit.semipar.mixed.mcmc(y,X,g,W,priors,start,10000)
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mixed.mcmc.R')#
+start <- list(beta=beta,mu.beta=mu.beta,Lambda=Lambda,sigma.alpha=sigma.alpha,alpha=alpha)#
+priors <- list(sigma.beta=10,S0=diag(qX),nu=qX+1,r=2,q=1)#
+out1 <- probit.semipar.mixed.mcmc(y,X,g,W,priors,start,10000)
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mixed.mcmc.R')#
+start <- list(beta=beta,mu.beta=mu.beta,Lambda=Lambda,sigma.alpha=sigma.alpha,alpha=alpha)#
+priors <- list(sigma.beta=10,S0=diag(qX),nu=qX+1,r=2,q=1)#
+out1 <- probit.semipar.mixed.mcmc(y,X,g,W,priors,start,10000)
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mixed.mcmc.R')#
+start <- list(beta=beta,mu.beta=mu.beta,Lambda=Lambda,sigma.alpha=sigma.alpha,alpha=alpha)#
+priors <- list(sigma.beta=10,S0=diag(qX),nu=qX+1,r=2,q=1)#
+out1 <- probit.semipar.mixed.mcmc(y,X,g,W,priors,start,10000)
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mixed.mcmc.R')#
+start <- list(beta=beta,mu.beta=mu.beta,Lambda=Lambda,sigma.alpha=sigma.alpha,alpha=alpha)#
+priors <- list(sigma.beta=10,S0=diag(qX),nu=qX+1,r=2,q=1)#
+out1 <- probit.semipar.mixed.mcmc(y,X,g,W,priors,start,10000)
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mixed.mcmc.R')#
+start <- list(beta=beta,mu.beta=mu.beta,Lambda=Lambda,sigma.alpha=sigma.alpha,alpha=alpha)#
+priors <- list(sigma.beta=10,S0=diag(qX),nu=qX+1,r=2,q=1)#
+out1 <- probit.semipar.mixed.mcmc(y,X,g,W,priors,start,10000)
+source('~/Documents/git/SemiparametricRegression/probit.semipar.mixed.mcmc.R')#
+start <- list(beta=beta,mu.beta=mu.beta,Lambda=Lambda,sigma.alpha=sigma.alpha,alpha=alpha)#
+priors <- list(sigma.beta=10,S0=diag(qX),nu=qX+1,r=2,q=1)#
+out1 <- probit.semipar.mixed.mcmc(y,X,g,W,priors,start,10000)
+matplot(cbind(out1$Lambda[1,1,],out1$Lambda[1,2,]),type="l")
+abline(h=c(Lambda[1,1],Lambda[1,2]),lty=2,col=1:qX)
+g.idx <- 10  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 1  # group idx for plotting beta_j
+g.idx <- 2  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 3  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 4  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 5  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 6  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 7  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 8  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 9  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+g.idx <- 10  # group idx for plotting beta_j
+matplot(out1$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
+matplot(out1$mu.beta,type="l");abline(h=mu.beta,col=1:qX,lty=2)
+matplot(cbind(out1$Lambda[1,1,],out1$Lambda[1,2,]),type="l")
+abline(h=c(Lambda[1,1],Lambda[1,2]),lty=2,col=1:qX)
+mean(out1$Lambda[1,1,])
+matplot(out1$sigma.alpha,type="l")
+matplot(out1$xi,type="l")
