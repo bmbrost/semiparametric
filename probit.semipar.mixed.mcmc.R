@@ -1,4 +1,4 @@
-probit.semipar.mixed.mcmc <- function(y,X,g,W,priors,start,n.mcmc){
+probit.semipar.mixed.mcmc <- function(y,X,g,W,priors,start,tune,adapt=TRUE,n.mcmc){
 
 	###
 	### Brian M. Brost (09 MAR 2016)
@@ -20,6 +20,14 @@ probit.semipar.mixed.mcmc <- function(y,X,g,W,priors,start,n.mcmc){
 	###
 	###  Libraries and Subroutines
 	###
+
+	# library(MCMCpack)  # for function rwish 
+	
+	get.tune <- function(tune,keep,k,target=0.44){  # adaptive tuning
+		# a <- min(0.01,1/sqrt(k))
+		a <- min(0.025,1/sqrt(k))
+		exp(ifelse(keep<target,log(tune)-a,log(tune)+a))
+	}
 	
 	truncnormsamp <- function(mu,sig2,low,high,nsamp){
 	  flow=pnorm(low,mu,sqrt(sig2)) 
@@ -58,7 +66,7 @@ probit.semipar.mixed.mcmc <- function(y,X,g,W,priors,start,n.mcmc){
 	mu.beta <- matrix(start$mu.beta,qX,1)
 	Lambda <- start$Lambda
 	Lambda.inv <- solve(Lambda)
-xi <- rep(1.5,qX)
+# xi <- rep(1.0,qX)
 	Sigma.alpha <- lapply(qW,function(x) diag(x)*start$sigma.alpha^2)
 	Sigma.alpha.inv <- lapply(Sigma.alpha,solve)
 	W.cross <- lapply(W,crossprod)  # t(W)%*%Wcross product of W
@@ -76,14 +84,16 @@ xi <- rep(1.5,qX)
   
 	beta.save <- array(0,dim=c(n.mcmc,qX,J))
 	mu.beta.save <- matrix(0,n.mcmc,qX)
-	xi.save <- matrix(0,n.mcmc,qX)
+# xi.save <- matrix(0,n.mcmc,qX)
 	alpha.save <- lapply(qW,function(x) matrix(0,n.mcmc,x))
 	Lambda.save <- array(0,dim=c(qX,qX,n.mcmc))
 	sigma.alpha.save <- matrix(0,n.mcmc,J)
 	v.save <- matrix(0,n.mcmc,n)
 
 	keep <- list(xi=0)
-	
+# keep.tmp <- keep
+# T.b <- 50  # frequency of adaptive tuning
+
 	###
 	###  Gibbs Loop
 	###
@@ -91,27 +101,31 @@ xi <- rep(1.5,qX)
 	for(k in 1:n.mcmc){
 		if(k%%1000==0) cat(k," ");flush.console()
 
-		###
-		### Update alpha.j
-		###
+		# if(adapt==TRUE & k%%T.b==0) {  # Adaptive tuning
+			# keep.tmp$xi <- keep.tmp$xi/(T.b*qX)
+			# tune$xi <- get.tune(tune$xi,keep.tmp$xi,k)
+			# keep.tmp <- lapply(keep.tmp,function(x) x*0)
+	   	# } 	
 
 		for(i in 1:J){
+
+			###
+			### Update alpha_j
+			###
+# browser()		
 			idx <- g.idx[[i]]
 			b <- crossprod(W[[i]],(v[idx]-X[idx,]%*%beta[,i]))
 			A.inv <- solve(W.cross[[i]]+Sigma.alpha.inv[[i]])
 			alpha[[i]] <- A.inv%*%b+t(chol(A.inv))%*%matrix(rnorm(qW[i]),qW[i],1)
 			# alpha[[i]] <- t(rmvnorm(1,A.inv%*%b,A.inv))
 			alpha.save[[i]][k,] <- alpha[[i]]
-		}
-
-	  	###
-	  	### Sample beta_j
-	  	###
-# browser()		
-		for(i in 1:J){
-			idx <- g.idx[[i]]
-			b <- crossprod(X[idx,],(v[idx]-W[[i]]%*%alpha[[i]])) + mu.beta
+		  	
+		  	###
+		  	### Sample beta_j
+	  		###
+	  		
 			A.inv <- solve(t(X[idx,])%*%X[idx,]+Lambda.inv) 
+			b <- crossprod(X[idx,],(v[idx]-W[[i]]%*%alpha[[i]]))+Lambda.inv%*%mu.beta
 			beta[,i] <- A.inv%*%b+t(chol(A.inv))%*%matrix(rnorm(qX),qX,1)
 			# beta[,i] <- t(rmvnorm(1,A.inv%*%b,A.inv))
 		}
@@ -125,7 +139,7 @@ xi <- rep(1.5,qX)
 	  	v[y0] <- truncnormsamp(linpred[y0],1,-Inf,0,y0.sum)
 
 		###
-		### Update sigma.alpha.j
+		### Update sigma.alpha_j
 		###
 
 		r.tmp <- 1/(unlist(lapply(alpha,function(x) sum(x^2)))/2+1/r)
@@ -133,7 +147,6 @@ xi <- rep(1.5,qX)
 		sigma2.alpha <- 1/sapply(r.tmp,function(x) rgamma(1,q.tmp,,x))
 		for(i in 1:J) diag(Sigma.alpha[[i]]) <- sigma2.alpha[i]
 		Sigma.alpha.inv <- lapply(Sigma.alpha,solve)
-# sigma2.alpha <- 1
 			
 	  	###
 	  	### Sample mu_beta
@@ -148,45 +161,46 @@ xi <- rep(1.5,qX)
 	  	###
 	  	### Sample Lambda
 	  	###
-		
+# browser()		
 	  	Sn <- S0+crossprod(t(beta)-matrix(mu.beta,J,2,byrow=TRUE))
-		Q <- solve(rWishart(1,nu+J,solve(Sn))[,,1])
-		
-		# Lambda <- solve(rWishart(1,nu+J,solve(Sn))[,,1])
-		# Lambda.inv <- solve(Lambda)
-		
+		Lambda <- solve(rWishart(1,nu+J,solve(Sn))[,,1])
+		Lambda.inv <- solve(Lambda)
+
 		###
-		### Sample xi (scaling factors)
-		###
-# browser()
+		### Sample Lambda from scaled-inverse Wishart 
+		### 
 
-		xi.star <- rnorm(qX,xi,0.01)
-		idx <- which(xi>0 & xi<100)
-		for(i in idx){
-# i <- 2
-			xi.tmp <- xi
-			xi.tmp[i] <- xi.star[i]
-			Lambda.star <- (diag(qX)*xi.tmp)%*%Q%*%(diag(qX)*xi.tmp)
-# browser()
-			# Q[1,1]*xi.star[1]^2
-			# Q[1,2]*xi.star[1]*xi[2]
-			# Q[2,2]*xi[2]^2
-			# Q[2,2]*xi.star[2]^2
-			# Q[1,2]*xi[1]*xi.star[2]
+		# Sample unscaled covariance matrix
+		# Q <- solve(rWishart(1,nu+J,solve(Sn))[,,1])
 
-			mh.star.xi <- sum(dmvnorm(t(beta),mu.beta,Lambda.star,log=TRUE))
-			mh.0.xi <- sum(dmvnorm(t(beta),mu.beta,Lambda,log=TRUE))
+		# Sample xi (scaling factors)
+		# xi.star <- rnorm(qX,xi,tune$xi)
+		# idx <- which(xi>0 & xi<100)
+		# for(i in idx){
+			# xi.tmp <- xi
+			# xi.tmp[i] <- xi.star[i]
+			# Lambda.star <- (diag(qX)*xi.tmp)%*%Q%*%(diag(qX)*xi.tmp)
 
-			if(exp(mh.star.xi-mh.0.xi)>runif(1)){
+			# # Q[1,1]*xi.star[1]^2
+			# # Q[1,2]*xi.star[1]*xi[2]
+			# # Q[2,2]*xi[2]^2
+			# # Q[2,2]*xi.star[2]^2
+			# # Q[1,2]*xi[1]*xi.star[2]
+
+			# mh.star.xi <- sum(dmvnorm(t(beta),mu.beta,Lambda.star,log=TRUE))
+			# mh.0.xi <- sum(dmvnorm(t(beta),mu.beta,Lambda,log=TRUE))
+
+			# if(exp(mh.star.xi-mh.0.xi)>runif(1)){
 	        	# xi[i] <- xi.star[i]
-				Lambda <- Lambda.star
-				keep$xi <- keep$xi+1
-				# keep.tmp$sigma.mu <- keep.tmp$sigma.mu+1
-	    	} 
-		}		
+				# Lambda <- Lambda.star
+				# keep$xi <- keep$xi+1
+				# keep.tmp$xi <- keep.tmp$xi+1
+	    	# } 
+		# }		
 
 		# Lambda.inv <- solve(Lambda)
 				
+
 	  	###
 	  	### Save Samples 
 	  	###
@@ -196,17 +210,18 @@ xi <- rep(1.5,qX)
 		mu.beta.save[k,] <- mu.beta
 		sigma.alpha.save[k,] <- sqrt(sigma2.alpha)
 		Lambda.save[,,k] <- Lambda
-		xi.save[k,] <- xi
+		# xi.save[k,] <- xi
 	}
 	
-	keep$xi <- keep$xi/(qX*n.mcmc)
-	print(keep$xi)
+	# keep$xi <- keep$xi/(qX*n.mcmc)
+	# cat(paste("\nxi acceptance rate:",round(keep$xi,2))) 
+	# cat(paste("\nxi tuning parameter:",round(tune$xi,2))) 
 	
 	###
 	###  Write output 
 	###
 	
 	list(beta=beta.save,v=v.save,mu.beta=mu.beta.save,Lambda=Lambda.save,
-		alpha=alpha.save,sigma.alpha=sigma.alpha.save,xi=xi.save,keep=keep,
-		y=y,X=X,g=g,W=W,start=start,priors=priors,n.mcmc=n.mcmc)
+		alpha=alpha.save,sigma.alpha=sigma.alpha.save,#xi=xi.save,keep=keep,
+		y=y,X=X,g=g,W=W,start=start,priors=priors,tune=tune,n.mcmc=n.mcmc)
 }
