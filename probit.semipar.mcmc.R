@@ -46,15 +46,18 @@ probit.semipar.mcmc <- function(y,X,Z,priors,start,sigma.alpha,n.mcmc){
 
 	# browser()
 	beta <- matrix(start$beta,qX)
-	alpha <- matrix(start$alpha,qZ)
+	# alpha <- matrix(start$alpha,qZ)
 
 	mu.beta <- priors$mu.beta
 	Sigma.beta <- diag(qX)*priors$sigma.beta^2
 	Sigma.beta.inv <- solve(Sigma.beta)
 	
 	mu.alpha <- rep(0,qZ)
+	sigma.alpha <- start$sigma.alpha
 	Sigma.alpha <- diag(qZ)*sigma.alpha^2
 	Sigma.alpha.inv <- solve(Sigma.alpha)
+	q <- priors$q
+	r <- priors$r
 
 	###
 	### Create receptacles for output
@@ -74,14 +77,6 @@ probit.semipar.mcmc <- function(y,X,Z,priors,start,sigma.alpha,n.mcmc){
     	if(k%%1000==0) cat(k,"");flush.console()
 
 # browser()
-###
-		### Sample u (auxilliary variable for probit regression)
-	  	###
-	 
-		linpred <- X%*%beta+Z%*%alpha
-	  	u[y1] <- truncnormsamp(linpred[y1],1,0,Inf,y1.sum)
-	  	u[y0] <- truncnormsamp(linpred[y0],1,-Inf,0,y0.sum)
-
 		###
 		###  Sample alpha ('random' effects) 
 		###
@@ -97,6 +92,24 @@ probit.semipar.mcmc <- function(y,X,Z,priors,start,sigma.alpha,n.mcmc){
 	 	A.inv <- solve(t(X)%*%X+Sigma.beta.inv)
 	  	b <- t(X)%*%(u-Z%*%alpha)  # +mu.beta%*%Sigma.beta.inv
 	  	beta <- A.inv%*%b+t(chol(A.inv))%*%matrix(rnorm(qX),qX,1)
+
+		###
+		### Sample u (auxilliary variable for probit regression)
+	  	###
+	 
+		linpred <- X%*%beta+Z%*%alpha
+	  	u[y1] <- truncnormsamp(linpred[y1],1,0,Inf,y1.sum)
+	  	u[y0] <- truncnormsamp(linpred[y0],1,-Inf,0,y0.sum)
+
+		###
+		### Update sigma.alpha_j
+		###
+
+		r.tmp <- 1/(sum(alpha^2)/2+1/r)
+		q.tmp <- qW/2+q
+		sigma2.alpha <- 1/rgamma(1,q.tmp,,r.tmp)
+		diag(Sigma.alpha) <- sigma2.alpha
+		Sigma.alpha.inv <- solve(Sigma.alpha)
 		
 		###
 		###  Save samples 
@@ -105,6 +118,7 @@ probit.semipar.mcmc <- function(y,X,Z,priors,start,sigma.alpha,n.mcmc){
 		beta.save[k,] <- beta
 		alpha.save[k,] <- alpha
 		u.save[k,] <- u
+		sigma.alpha.save[k] <- sqrt(sigma2.alpha)
 	  	D.bar.save[k] <- -2*(sum(dbinom(y,1,pnorm(u),log=TRUE)))
 	}
 
@@ -121,5 +135,6 @@ probit.semipar.mcmc <- function(y,X,Z,priors,start,sigma.alpha,n.mcmc){
 	### Write output
 	###
   
-	list(beta=beta.save,alpha=alpha.save,u=u.save,DIC=DIC,n.mcmc=n.mcmc)
+	list(beta=beta.save,alpha=alpha.save,sigma.alpha=sigma.alpha.save,
+	u=u.save,DIC=DIC,n.mcmc=n.mcmc)
 }

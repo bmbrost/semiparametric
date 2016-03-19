@@ -1,4 +1,4 @@
-probit.semipar.mixed.mcmc <- function(y,X,g,W,priors,start,tune,adapt=TRUE,n.mcmc){
+probit.semipar.mixed.mcmc <- function(y,X,g,W,priors,start,n.mcmc){
 
 	###
 	### Brian M. Brost (09 MAR 2016)
@@ -44,6 +44,7 @@ probit.semipar.mixed.mcmc <- function(y,X,g,W,priors,start,tune,adapt=TRUE,n.mcm
 
 # browser()
 	J <- length(unique(g))  # number of groups
+	g <- as.numeric(g)
 	g.idx <- sapply(sort(unique(g)),function(x) which(g==x),simplify=FALSE)
 		# indexes of observations in y by group
 	n.j <- unlist(lapply(g.idx,length))  # number of observations per group
@@ -62,10 +63,10 @@ probit.semipar.mixed.mcmc <- function(y,X,g,W,priors,start,tune,adapt=TRUE,n.mcm
 
 # browser()
 	beta <- matrix(start$beta,qX,J)
-# alpha <- start$alpha
 	mu.beta <- matrix(start$mu.beta,qX,1)
 	Lambda <- start$Lambda
 	Lambda.inv <- solve(Lambda)
+	alpha <- lapply(qW,function(x) rep(0,x))
 # xi <- rep(1.0,qX)
 	Sigma.alpha <- lapply(qW,function(x) diag(x)*start$sigma.alpha^2)
 	Sigma.alpha.inv <- lapply(Sigma.alpha,solve)
@@ -134,7 +135,8 @@ probit.semipar.mixed.mcmc <- function(y,X,g,W,priors,start,tune,adapt=TRUE,n.mcm
 		### Sample v (auxilliary variable for probit regression)
 	  	###
 
-		linpred <- rowSums(X*t(beta[,g]))+c(sapply(1:J,function(x) W[[x]]%*%alpha[[x]]))
+		linpred <- rowSums(X*t(beta[,g]))+
+			unlist(sapply(1:J,function(x) W[[x]]%*%alpha[[x]]))
 		v[y1] <- truncnormsamp(linpred[y1],1,0,Inf,y1.sum)
 	  	v[y0] <- truncnormsamp(linpred[y0],1,-Inf,0,y0.sum)
 
@@ -162,7 +164,7 @@ probit.semipar.mixed.mcmc <- function(y,X,g,W,priors,start,tune,adapt=TRUE,n.mcm
 	  	### Sample Lambda
 	  	###
 # browser()		
-	  	Sn <- S0+crossprod(t(beta)-matrix(mu.beta,J,2,byrow=TRUE))
+	  	Sn <- S0+crossprod(t(beta)-matrix(mu.beta,J,qX,byrow=TRUE))
 		Lambda <- solve(rWishart(1,nu+J,solve(Sn))[,,1])
 		Lambda.inv <- solve(Lambda)
 
@@ -223,5 +225,5 @@ probit.semipar.mixed.mcmc <- function(y,X,g,W,priors,start,tune,adapt=TRUE,n.mcm
 	
 	list(beta=beta.save,v=v.save,mu.beta=mu.beta.save,Lambda=Lambda.save,
 		alpha=alpha.save,sigma.alpha=sigma.alpha.save,#xi=xi.save,keep=keep,
-		y=y,X=X,g=g,W=W,start=start,priors=priors,tune=tune,n.mcmc=n.mcmc)
+		y=y,X=X,g=g,W=W,start=start,priors=priors,n.mcmc=n.mcmc)
 }
