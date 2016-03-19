@@ -1,4 +1,4 @@
-probit.semipar.mcmc <- function(y,X,Z,priors,start,sigma.alpha,n.mcmc){
+probit.semireg.mcmc <- function(y,X,Z,priors,start,sigma.alpha,n.mcmc){
 	
 	###
 	### Brian M. Brost (10 AUG 2015)

@@ -57,11 +57,11 @@ matplot(matrix(time,T,J),matrix(rowSums(X*beta.tmp)+trend,T,J),
 	col=4,type="l",lty=2,add=TRUE)
 
 # Fit model
-source('~/Documents/git/SemiparametricRegression/probit.semipar.mixed.mcmc.R')
+source('~/Documents/git/SemiReg/probit.semireg.mixed.mcmc.R')
 start <- list(beta=beta,mu.beta=mu.beta,Lambda=Lambda,sigma.alpha=sigma.alpha,alpha=alpha)
 priors <- list(sigma.beta=10,S0=diag(qX),nu=qX+1,r=2,q=1)
 tune <- list(xi=0.01)
-out1 <- probit.semipar.mixed.mcmc(y,X,g,W,priors,start,tune,adapt=TRUE,10000)
+out1 <- probit.semireg.mixed.mcmc(y,X,g,W,priors,start,tune,adapt=TRUE,10000)
 
 # Examine estimates for beta_j and alpha_j
 g.idx <- 4  # group idx for plotting beta_j
@@ -93,26 +93,26 @@ points(y,col=3)
 ### 
 
 # Compare to mixed effect model (without a nonparametric component)
-source('~/Documents/git/MixedModels/probit.mixed.mcmc.R', chdir = TRUE)
+source('~/Documents/git/GLMM/probit.glmm.mcmc.R', chdir = TRUE)
 start <- list(beta=t(beta),mu.beta=mu.beta,Lambda=Lambda)
 priors <- list(sigma.beta=5,S0=diag(qX),nu=qX+1)
-out2 <- probit.mixed.mcmc(y,X,g,priors,start,10000)
+out2 <- probit.glmm.mcmc(y,X,g,priors,start,10000)
 matplot(out2$beta[,,g.idx],type="l",lty=1);abline(h=beta[,g.idx],col=1:qX,lty=2)
 matplot(out2$mu.beta,type="l");abline(h=mu.beta,col=1:qX,lty=2)
 
 # Compare to fixed effect model (individual-level model with nonparametric component)
-source('~/Documents/git/SemiparametricRegression/probit.semipar.mcmc.R', chdir = TRUE)
+source('~/Documents/git/SemiReg/probit.semireg.mcmc.R', chdir = TRUE)
 start <- list(beta=c(beta[,g.idx]),alpha=c(alpha[[g.idx]]))
 # hist(sqrt(1/rgamma(1000,1,,2)),breaks=100)
 priors <- list(mu.beta=rep(0,qX),sigma.beta=10)
-out3 <- probit.semipar.mcmc(y[g==g.idx],X[g==g.idx,],W[[g.idx]],
+out3 <- probit.semireg.mcmc(y[g==g.idx],X[g==g.idx,],W[[g.idx]],
 	priors=priors,start=start,sigma.alpha=sigma.alpha,n.mcmc=5000)
 matplot(out3$beta,type="l");abline(h=beta[,g.idx],col=1:qX)
 
 # Compare to GLM with probit link (individual-level model without nonparametric component)
-source('~/Documents/git/GLM/probit.reg.mcmc.R', chdir = TRUE)
+source('~/Documents/git/GLM/probit.glm.mcmc.R', chdir = TRUE)
 start <- list(beta=beta[,g.idx])
 priors <- list(mu.beta=rep(0,qX),Sigma.beta=diag(qX)*100)
-out4 <- probit.reg.mcmc(y[g==g.idx],X[g==g.idx,],priors,start,10000)
+out4 <- probit.glm.mcmc(y[g==g.idx],X[g==g.idx,],priors,start,10000)
 matplot(out4$beta,type="l");abline(h=beta[,g.idx],col=1:qX)
 

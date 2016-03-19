@@ -48,11 +48,11 @@ lines(time,X%*%beta,col=2)
 lines(time,trend,col=3)
 lines(time,X%*%beta+trend,col=4)
 
-source('~/Documents/git/SemiparametricRegression/probit.semipar.mcmc.R', chdir = TRUE)
+source('~/Documents/git/SemiReg/probit.semireg.mcmc.R', chdir = TRUE)
 start <- list(beta=beta,alpha=alpha)
 # hist(sqrt(1/rgamma(1000,1,,2)))
 priors <- list(mu.beta=rep(0,qX),sigma.beta=10)
-out1 <- probit.semipar.mcmc(y,X,Z,priors=priors,start=start,sigma.alpha=sigma.alpha,
+out1 <- probit.semireg.mcmc(y,X,Z,priors=priors,start=start,sigma.alpha=sigma.alpha,
 	n.mcmc=10000)
 out1$DIC
 
@@ -124,13 +124,13 @@ matplot(Z,type="l")
 qZ <- ncol(Z)
 
 # Fit model
-source('~/Documents/git/SemiparametricRegression/probit.semipar.mcmc.R', chdir = TRUE)
+source('~/Documents/git/SemiReg/probit.semireg.mcmc.R', chdir = TRUE)
 start <- list(beta=beta,alpha=rep(0,qZ))
 # hist(sqrt(1/rgamma(1000,1,,2)))
 priors <- list(mu.beta=rep(0,qX),sigma.beta=10)
 idx <- sort(sample(1:T,T/2))  # subset for model fitting
 # Predict status of out-of-sample observations below
-out1 <- probit.semipar.mcmc(y[idx],X[idx,],Z[idx,],
+out1 <- probit.semireg.mcmc(y[idx],X[idx,],Z[idx,],
 	priors=priors,start=start,sigma.alpha=1,n.mcmc=1000)
 out1$DIC
 
@@ -194,7 +194,7 @@ coarse.grid <- seq(0.01,2,0.1)  # coarse grid for sigma.alpha
 l.coarse <- length(coarse.grid)
 DIC.coarse <- numeric(l.coarse)
 for(i in 1:l.coarse){
-	DIC.coarse[i] <- probit.semipar.mcmc(y,X,Z,priors=priors,start=start,
+	DIC.coarse[i] <- probit.semireg.mcmc(y,X,Z,priors=priors,start=start,
 		sigma.alpha=coarse.grid[i],n.mcmc=1000)$DIC
 }
 
@@ -205,7 +205,7 @@ l.fine <- 10
 fine.grid <- seq(coarse.grid[idx-1],coarse.grid[idx+1],length.out=10)
 DIC.fine <- numeric(l.fine)
 for(i in 1:l.fine){
-	DIC.fine[i] <- probit.semipar.mcmc(y,X,Z,priors=priors,start=start,
+	DIC.fine[i] <- probit.semireg.mcmc(y,X,Z,priors=priors,start=start,
 		sigma.alpha=fine.grid[i],n.mcmc=1000)$DIC
 }
 

@@ -113,11 +113,11 @@ lines(time,y.hat.lme,col=2)
 beta.hat.lme <- as.matrix(fixef(fit))
 alpha.hat.lme <- t(as.matrix(ranef(fit)))
 
-source('~/Documents/git/SemiparametricRegression/normal.semipar.mcmc.R', chdir = TRUE)
+source('~/Documents/git/SemiReg/normal.semireg.mcmc.R', chdir = TRUE)
 start <- list(beta=beta,alpha=alpha,sigma=sigma,sigma.alpha=sigma.alpha)
 # hist(sqrt(1/rgamma(1000,1,,2)))
 priors <- list(sigma.beta=10,r.sigma=2,q.sigma=1)
-out1 <- normal.semipar.mcmc(y,X,Z,priors=priors,start=start,sigma.alpha=NULL,n.mcmc=50000)
+out1 <- normal.semireg.mcmc(y,X,Z,priors=priors,start=start,sigma.alpha=NULL,n.mcmc=50000)
 out1$DIC
 
 matplot(out1$beta,type="l",lty=1);abline(h=beta,col=1:3)
@@ -178,11 +178,11 @@ lines(time,y.hat.lme,col=2)
 beta.hat.lme <- as.matrix(fixef(fit))
 alpha.hat.lme <- t(as.matrix(ranef(fit)))
 
-source('~/Documents/git/SemiparametricRegression/normal.semipar.mcmc.R', chdir = TRUE)
+source('~/Documents/git/SemiReg/normal.semireg.mcmc.R', chdir = TRUE)
 start <- list(beta=beta,sigma=sigma,sigma.alpha=1)
 # hist(sqrt(1/rgamma(1000,1,,2)))
 priors <- list(sigma.beta=10,r.sigma=2,q.sigma=1)
-out1 <- normal.semipar.mcmc(y,X,Z,priors=priors,start=start,sigma.alpha=NULL,n.mcmc=10000)
+out1 <- normal.semireg.mcmc(y,X,Z,priors=priors,start=start,sigma.alpha=NULL,n.mcmc=10000)
 out1$DIC
 
 matplot(out1$beta,type="l",lty=1);abline(h=beta,col=1:3)
@@ -229,7 +229,7 @@ coarse.grid <- seq(0.01,2,0.1)  # coarse grid for sigma.alpha
 l.coarse <- length(coarse.grid)
 DIC.coarse <- numeric(l.coarse)
 for(i in 1:l.coarse){
-	DIC.coarse[i] <- semipar.mcmc(y,X,Z,priors=priors,start=start,
+	DIC.coarse[i] <- normal.semipar.mcmc(y,X,Z,priors=priors,start=start,
 		sigma.alpha=coarse.grid[i],n.mcmc=1000)$DIC
 }
 
@@ -240,7 +240,7 @@ l.fine <- 10
 fine.grid <- seq(coarse.grid[idx-1],coarse.grid[idx+1],length.out=10)
 DIC.fine <- numeric(l.fine)
 for(i in 1:l.fine){
-	DIC.fine[i] <- semipar.mcmc(y,X,Z,priors=priors,start=start,
+	DIC.fine[i] <- normal.semireg.mcmc(y,X,Z,priors=priors,start=start,
 		sigma.alpha=fine.grid[i],n.mcmc=1000)$DIC
 }
 

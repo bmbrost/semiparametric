@@ -1,4 +1,4 @@
-probit.semipar.mixed.mcmc <- function(y,X,g,W,priors,start,n.mcmc){
+probit.semireg.mixed.mcmc <- function(y,X,g,W,priors,start,n.mcmc){
 
 	###
 	### Brian M. Brost (09 MAR 2016)
