@@ -48,7 +48,7 @@ lines(time,X%*%beta,col=2)
 lines(time,trend,col=3)
 lines(time,X%*%beta+trend,col=4)
 
-source('~/Documents/git/SemiReg/probit.semireg.mcmc.R', chdir = TRUE)
+source('~/Documents/git/SemiPar/probit.semipar.mcmc.R', chdir = TRUE)
 start <- list(beta=beta,alpha=alpha)
 # hist(sqrt(1/rgamma(1000,1,,2)))
 priors <- list(mu.beta=rep(0,qX),sigma.beta=10)

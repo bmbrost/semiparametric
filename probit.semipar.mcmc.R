@@ -1,4 +1,4 @@
-probit.semireg.mcmc <- function(y,X,Z,priors,start,sigma.alpha,n.mcmc){
+probit.semipar.mcmc <- function(y,X,Z,priors,start,sigma.alpha,n.mcmc){
 	
 	###
 	### Brian M. Brost (10 AUG 2015)
@@ -30,7 +30,7 @@ probit.semireg.mcmc <- function(y,X,Z,priors,start,sigma.alpha,n.mcmc){
 	###
 	###  Setup Variables 
 	###
-  
+
 	n <- length(y)  # number of observations
 	qX <- ncol(X)  # number of 'fixed' effects
 	qZ <- ncol(Z)  # number of 'random' effects
@@ -104,7 +104,7 @@ probit.semireg.mcmc <- function(y,X,Z,priors,start,sigma.alpha,n.mcmc){
 		###
 		### Update sigma.alpha_j
 		###
-
+# browser()
 		r.tmp <- 1/(sum(alpha^2)/2+1/r)
 		q.tmp <- qW/2+q
 		sigma2.alpha <- 1/rgamma(1,q.tmp,,r.tmp)

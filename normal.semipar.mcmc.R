@@ -1,4 +1,4 @@
-normal.semireg.mcmc <- function(y,X,Z,priors,start,sigma.alpha=NULL,n.mcmc){
+normal.semipar.mcmc <- function(y,X,Z,priors,start,sigma.alpha=NULL,n.mcmc){
 	
 	###
 	### Brian M. Brost (05 AUG 2015)
